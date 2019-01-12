@@ -346,6 +346,9 @@ function Init()
     -- Reset the validation to update the title and set the validation flag correctly for any changes
     ResetDataValidation()
 
+    -- TODO Only hide this when in direct color mode
+    DrawRect(136, 220, 3, 9, BackgroundColor(), DrawMode.TilemapCache)
+
   else
 
     -- Patch background when loading fails
@@ -979,6 +982,9 @@ function UpdateHexColor(value)
   -- Shift the color based on the component's offset
   -- colorID =
 
+  print("Color mode", pixelVisionOS.paletteMode)
+
+
   local currentColor = Color(realColorID)
 
   if(colorID == 255) then
@@ -1001,27 +1007,31 @@ function UpdateHexColor(value)
 
   else
 
-    -- Make sure the color isn't duplicated
-    for i = 1, pixelVisionOS.totalSystemColors do
+    -- Only block duplicated colors when palette mode is set to true
+    if(pixelVisionOS.paletteMode == true) then
 
-      -- Test the new color against all of the existing system colors
-      if(value == Color(pixelVisionOS.colorOffset + (i - 1))) then
+      -- Make sure the color isn't duplicated
+      for i = 1, pixelVisionOS.totalSystemColors do
 
-        pixelVisionOS:ShowMessageModal(toolName .." Error", "'".. value .."' the same as system color ".. (i - 1) ..", enter a new color.", 160, false,
-          -- Make sure we restore the color value after the modal closes
-          function()
+        -- Test the new color against all of the existing system colors
+        if(value == Color(pixelVisionOS.colorOffset + (i - 1))) then
 
-            -- Change the color back to the original value in the input field
-            editorUI:ChangeInputField(colorHexInputData, currentColor:sub(2, - 1), false)
+          pixelVisionOS:ShowMessageModal(toolName .." Error", "'".. value .."' the same as system color ".. (i - 1) ..", enter a new color.", 160, false,
+            -- Make sure we restore the color value after the modal closes
+            function()
 
-          end
-        )
+              -- Change the color back to the original value in the input field
+              editorUI:ChangeInputField(colorHexInputData, currentColor:sub(2, - 1), false)
 
-        -- Exit out of the update function
-        return
+            end
+          )
+
+          -- Exit out of the update function
+          return
+
+        end
 
       end
-
     end
 
     -- Update the editor's color

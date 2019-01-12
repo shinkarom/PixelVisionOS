@@ -3,10 +3,10 @@
     "GameChip":
     {
         "savedData":{
-            "editing": "undefined",
-            "sessionID": "201901060640155606",
-            "rootDirectory": "/Disks/ProTools/Tools/MusicTool/",
-            "selectedSprite": "0"
+            "selectedSprite": "0",
+            "rootDirectory": "/Disks/Games/JumpNShootMan/",
+            "sessionID": "201901121324522016",
+            "editing": "undefined"
         }
     }
 }

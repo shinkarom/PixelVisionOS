@@ -457,12 +457,42 @@ function PixelVisionOS:UpdateTitleBar(data, timeDelta)
 
 end
 
-function PixelVisionOS:EnableMenuItem( id, value)
+function PixelVisionOS:EnableMenuItemByName( name, value)
 
-  if(self.titleBar.menu == nil) then
-    self.titleBar.menu = self:CreateTitleBarMenu(menuData.options, menuData.defaultToolTip)
+  -- self.titleBar.menu
+
+  -- if(self.titleBar.menu == nil) then
+  --   self.titleBar.menu = self:CreateTitleBarMenu(menuData.options, menuData.defaultToolTip)
+  --
+  -- end
+
+  local options = self.titleBar.menu.options
+
+  local total = #options
+
+  for i = 1, total do
+
+    local option = options[i]
+
+    if(option.name == name) then
+
+      if(option.enabled ~= value) then
+        option.enabled = value
+        self.editorUI:Invalidate(self.titleBar.menu)
+      end
+
+    end
 
   end
+
+end
+
+function PixelVisionOS:EnableMenuItem( id, value)
+
+  -- if(self.titleBar.menu == nil) then
+  --   self.titleBar.menu = self:CreateTitleBarMenu(menuData.options, menuData.defaultToolTip)
+  --
+  -- end
 
 
   local menuData = self.titleBar.menu

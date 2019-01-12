@@ -75,8 +75,10 @@ function PixelVisionOS:ImportColorsFromGame()
     -- get the game color at the current index
     local color = gameColors[i]
 
+    local ignoreColor = self.paletteMode == true and table.indexOf(self.systemColors, color) ~= -1 or false
+
     -- Look to see if we have the system color or if its not the mask color
-    if(table.indexOf(self.systemColors, color) == -1 and color ~= self.maskColor) then
+    if(ignoreColor == false and color ~= self.maskColor) then
 
       -- Reset the index to the last ID of the system color's array
       index = #self.systemColors
