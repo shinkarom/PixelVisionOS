@@ -61,7 +61,12 @@ function EditorUI:CreateInputArea(rect, text, toolTip, pattern, font, forceDraw,
   data.scrollLast = 0
   data.multiline = true
   data.inputTime = 0
-  data.inputDelay = .1
+  data.inputDelay = .15
+
+  data.keyInvalidation =
+  {
+
+  }
 
   data.keys = {
     Backspace = Keys.Backspace,
@@ -111,12 +116,11 @@ function EditorUI:CreateInputArea(rect, text, toolTip, pattern, font, forceDraw,
   end
 
   data.onBackspace = function(data)
-    self:InputAreaDeleteChar(data)
+    self:InputAreaBackspaceChar(data)
   end
 
   data.onDelete = function(data)
-    -- TODO need to delete the character to the right
-    print("Delete is not implemented")
+    self:InputAreaDeleteChar(data)
   end
 
   data.onTab = function(data)
@@ -296,11 +300,9 @@ function EditorUI:InputAreaKeyCapture(data)
     data.inputTime = 0
     if(Key(data.keys.Backspace)) then
 
-      if(data.onBackspace ~= nil) then
-        data.onBackspace(data)
-      end
-
-      self:InputAreaDeleteChar(data)
+        if(data.onBackspace ~= nil) then
+          data.onBackspace(data)
+        end
 
     elseif(Key(data.keys.Delete)) then
 
@@ -455,7 +457,7 @@ function EditorUI:InputAreaInsertChar(data, value)
 
 end
 
-function EditorUI:InputAreaDeleteChar(data)
+function EditorUI:InputAreaBackspaceChar(data)
 
   -- Get the current position
   local line, c, r = self:InputAreaCurrentLine(data)
@@ -481,9 +483,45 @@ function EditorUI:InputAreaDeleteChar(data)
     end
 
   else
-    data.lines[r] = line:sub(0, c - 1) ..line:sub(c + 1)
+    data.lines[r] = line:sub(0, c-1) ..line:sub(c + 1)
     -- Move cursor to the left
     self:InputAreaMoveCursorInDirection(data, - 1, 0)
+  end
+
+  -- force the input area to redraw itself
+  self:Invalidate(data)
+
+  -- Invalidate the text since it has changed
+  self:InputAreaInvalidateText(data)
+
+end
+
+function EditorUI:InputAreaDeleteChar(data)
+
+  -- Get the current position
+  local line, c, r = self:InputAreaCurrentLine(data)
+
+  -- Check to see if we are at the beginning of the line
+  if(c >= #line) then
+
+    -- make sure we are not on the first line
+    if(r < data.totalLines)then
+
+      r2 = r + 1
+      local nextLine = data.lines[r2]
+
+      data.lines[r] = line .. nextLine
+
+      table.remove(data.lines, r2)
+
+      data.totalLines = #data.lines
+
+    end
+  --
+  else
+    data.lines[r] = line:sub(0, c ) ..line:sub(c + 2)
+    -- Move cursor to the left
+    self:InputAreaMoveCursorInDirection(data, 0, 0)
   end
 
   -- force the input area to redraw itself
