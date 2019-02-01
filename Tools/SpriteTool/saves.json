@@ -3,10 +3,10 @@
     "GameChip":
     {
         "savedData":{
-            "selectedSprite": "0",
-            "rootDirectory": "/Disks/Games/JumpNShootMan/",
-            "sessionID": "201901121324522016",
-            "editing": "undefined"
+            "editing": "undefined",
+            "sessionID": "201901290629020258",
+            "rootDirectory": "/Disks/Tutorials/Free/SpriteLayersTutorial/",
+            "selectedSprite": "19"
         }
     }
 }

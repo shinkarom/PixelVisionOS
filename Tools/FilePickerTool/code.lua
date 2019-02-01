@@ -38,7 +38,7 @@ local refreshTime = 0
 local refreshDelay = 5
 local fileCount = 0
 
-local fileTypeMap = 
+local fileTypeMap =
 {
   folder = "filefolder",
   updirectory = "fileparentfolder",
@@ -62,7 +62,7 @@ local fileTypeMap =
   new = "filenewfile"
 }
 
-local extToTypeMap = 
+local extToTypeMap =
 {
   colors = "png",
   system = "json",
@@ -159,7 +159,7 @@ function Init()
   -- TODO need to see if the log file actually exists
   local logExits = true
 
-  local menuOptions = 
+  local menuOptions =
   {
     -- About ID 1
     {name = "About", action = function() pixelVisionOS:ShowAboutModal(toolName, aboutText) end, toolTip = "Learn about PV8."},
@@ -1899,6 +1899,13 @@ function OnExportGame()
 
   local response = ExportGame(currentDirectory)
 
-  pixelVisionOS:ShowMessageModal("Build " .. (response.success == true and "Complete" or "Failed"), response.message, 160)
+  pixelVisionOS:ShowMessageModal("Build " .. (response.success == true and "Complete" or "Failed"), response.message, 160, false, function()
+    if(response.success == true) then
+        OpenWindow(response.path)
+    end
+
+  end)
+
+  -- TODO this will return a path, do we want to go to the path after a build?
 
 end

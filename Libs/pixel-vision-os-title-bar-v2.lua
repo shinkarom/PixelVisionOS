@@ -244,7 +244,7 @@ function PixelVisionOS:CreateTitleBarMenu(items, toolTip)
       self:DrawTitleBarMenuItem(tmpCanvas, option)
 
       -- Save the over state
-      option.overPixelData = 
+      option.overPixelData =
       {
         tmpCanvas:GetPixels(),
         tmpX + pos.x,
