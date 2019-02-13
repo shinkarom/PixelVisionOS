@@ -1,11 +1,11 @@
 {
-    
-    "GameChip":
-    {
-        "savedData":{
-            "rootDirectory": "/Disks/EmptyDisk/MusicDemo/",
-            "currentID": "0",
-            "sessionID": "201901061620269406"
-        }
+
+"GameChip":
+{
+    "savedData":{
+        "sessionID": "201902101420342789",
+        "currentID": "0",
+        "rootDirectory": "/Disks/ColorShiftTutorial/"
     }
+}
 }

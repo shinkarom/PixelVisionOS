@@ -38,6 +38,7 @@ local refreshTime = 0
 local refreshDelay = 5
 local fileCount = 0
 
+
 local fileTypeMap =
 {
   folder = "filefolder",
@@ -45,9 +46,9 @@ local fileTypeMap =
   lua = "filecode",
   json = "filejson",
   png = "filepng",
-  pv8 = "filerun",
+  run = "filerun", -- TODO need to change this to run
   txt = "filetext",
-
+  pv8 = "diskempty",
 
   -- TODO these are not core file types
   unknown = "fileunknown",
@@ -717,19 +718,32 @@ function CanDelete(file)
 
 end
 
-function OnEjectDisk()
+function OnEjectDisk(diskName)
 
-  -- print("Selected", desktopIconButtons.currentSelection)
-  local id = desktopIconButtons.currentSelection
-  local iconButton = desktopIconButtons.buttons[id]
-
-  if(currentDirectory ~= "none") then
-    CloseWindow()
+  if(diskName == nil) then
+    local id = desktopIconButtons.currentSelection
+    diskName = desktopIcons[id].name
   end
 
-  EjectDisk("/" .. desktopIcons[id].name .. "/")
+  diskPath = "/" .. diskName .. "/"
 
-  RebuildDesktopIcons()
+  pixelVisionOS:ShowMessageModal("Eject Disk", "Do you want to eject the '".. diskName.."'disk?", 160, true,
+  function()
+
+    -- Only perform the copy if the user selects OK from the modal
+    if(pixelVisionOS.messageModal.selectionValue) then
+
+      if(currentDirectory ~= "none") then
+        CloseWindow()
+      end
+
+      EjectDisk(diskPath)
+
+      RebuildDesktopIcons()
+    end
+
+  end
+  )
 
 end
 
@@ -774,7 +788,8 @@ function RebuildDesktopIcons()
       name = "Workspace",
       sprite = "filedrive",
       tooltip = "This is the main drive",
-      path = "/Workspace/"
+      path = "/Workspace/",
+      type = "workspace"
     })
   end
 
@@ -787,7 +802,8 @@ function RebuildDesktopIcons()
       name = k,
       sprite = "diskempty",
       tooltip = "This is a disk.",
-      path = v
+      path = v,
+      type = "disk"
     })
 
   end
@@ -826,6 +842,10 @@ function RebuildDesktopIcons()
 
     local button = editorUI:NewIconGroupButton(desktopIconButtons, {x = 216 - 8, y = startY}, item.sprite, item.name, item.tooltip, bgColor)
 
+    button.iconName = item.name
+    button.iconType = item.type
+    button.iconPath = item.path
+
     startY = startY + 32 + 8
 
     -- button.redrawBackground = true
@@ -851,7 +871,8 @@ function RebuildDesktopIcons()
     name = "Trash",
     sprite = #trashFiles > 0 and "filetrashfull" or "filetrashempty",
     tooltip = "The trash folder",
-    path = "/Tmp/Trash/"
+    path = "/Tmp/Trash/",
+    type = "trash"
   })
 
   pixelVisionOS:EnableMenuItemByName(EmptyTrashShortcut, #trashFiles > 0)
@@ -860,6 +881,26 @@ function RebuildDesktopIcons()
 
   local trashButton = editorUI:NewIconGroupButton(desktopIconButtons, {x = 216 - 8, y = 200 - 2}, item.sprite, item.name, item.tooltip, bgColor)
 
+  -- Lock the trash from Dragging
+  trashButton.dragDelay = -1
+
+  trashButton.onDropTarget = function(source, dest)
+
+
+    if(source.iconType == "disk") then
+
+      -- print("Eject disk", source.iconName)
+
+      OnEjectDisk(source.iconName)
+
+    else
+
+      OnDeleteFile(source.iconPath)
+
+      print("Delete file")
+    end
+
+  end
   -- end
 
 end
@@ -996,7 +1037,16 @@ function OnNewFolder(name)
 
 end
 
-function OnDeleteFile()
+function OnDeleteFile(path)
+
+  if(path == nil) then
+
+    if(currentSelectedFile == nil) then
+      return
+    end
+
+    path = currentSelectedFile.path
+  end
 
   -- Ask the user if they want to delete the file first
   pixelVisionOS:ShowMessageModal("Delete File", "Are you sure you want to move this file to the trash?", 160, true,
@@ -1006,10 +1056,10 @@ function OnDeleteFile()
       if(pixelVisionOS.messageModal.selectionValue) then
 
         -- Look to see if the current file exists and if it's not in the trash
-        if(currentSelectedFile ~= nil and currentDirectory:sub(1, #trashPath) ~= trashPath) then
+        if(currentDirectory:sub(1, #trashPath) ~= trashPath) then
 
           -- Delete the file
-          DeleteFile(currentSelectedFile.path)
+          DeleteFile(path)
 
           -- TODO should only do this if the trash is empty
           -- Rebuild the desktop if we need to change the trash icon
@@ -1024,7 +1074,7 @@ function OnDeleteFile()
         else
 
           -- Let the user know the file can not be deleted
-          pixelVisionOS:ShowMessageModal(toolName .. " Error", "'".. currentSelectedFile.name .. "' could not be deleted.", 160, false)
+          pixelVisionOS:ShowMessageModal(toolName .. " Error", "'".. path .. "' could not be deleted.", 160, false)
 
         end
       end
@@ -1100,8 +1150,8 @@ function OpenWindow(path, scrollTo, selection)
         1,
         {
           name = "Run",
-          type = "pv8",
-          ext = "pv8",
+          type = "run",
+          ext = "run",
           path = path,
           isDirectory = false
         }
@@ -1561,10 +1611,29 @@ function OnWindowIconClick(id)
     )
 
     -- Check to see if the file is an executable
-  elseif(type == "pv8") then
+  elseif(type == "run") then
 
 
     LoadGame(path)
+
+  elseif(type == "pv8") then
+
+    -- TODO need to see if there is space to mount another disk
+    -- TODO need to know if this disk is being mounted as read only
+    -- TODO don't run
+    pixelVisionOS:ShowMessageModal("Run Disk", "Do you want to run this disk?", 160, true,
+    function()
+
+      -- Only perform the copy if the user selects OK from the modal
+      if(pixelVisionOS.messageModal.selectionValue) then
+
+        -- TODO need to load the game in read only mode
+        LoadGame(path)
+
+      end
+
+    end
+    )
 
     -- Check to see if there is an editor for the type or if the type is unknown
   elseif(editorMapping[type] == nil or type == "unknown") then
@@ -1712,6 +1781,14 @@ function DrawWindow(files, startID, total)
       end
 
       local button = editorUI:NewIconGroupButton(windowIconButtons, {x = newX, y = newY}, spriteName, item.name, toolTip, bgColor)
+
+      button.iconName = item.name
+      button.iconType = item.type
+      button.iconPath = item.path
+
+
+      -- TODO need to disable some icons from dragging here
+
       --
       -- if(item.type ~= "updirectory" and item.type ~= "folder" and item.type ~= "run") then
       --   editorUI:Enable(button, not TrashOpen())
@@ -1850,6 +1927,8 @@ function Update(timeDelta)
     editorUI:UpdateIconGroup(desktopIconButtons)
     editorUI:UpdateIconGroup(windowIconButtons)
 
+    -- if(data.dragging == true and self.editorUI.collisionManager.dragTime > data.dragDelay) then
+
     editorUI:UpdateButton(closeButton)
 
     editorUI:UpdateSlider(vSliderData)
@@ -1870,6 +1949,17 @@ function Draw()
   if(shuttingDown == true) then
     return
   end
+
+  -- if(desktopIconButtons.dragTarget ~= nil) then
+  --   print("Drag Icon", desktopIconButtons.dragTarget.name)
+  --
+  --   dragIcon[1] = desktopIconButtons.dragTarget.cachedSpriteData.up-- The current icon state
+  --
+  --   data.picker.overDrawArgs[2] = self.editorUI.collisionManager.mousePos.x - 10
+  --   data.picker.overDrawArgs[3] = self.editorUI.collisionManager.mousePos.y - 10
+  --
+  --
+  -- end
 
   -- The UI should be the last thing to draw after your own custom draw calls
   pixelVisionOS:Draw()
@@ -1892,6 +1982,8 @@ function Shutdown()
   -- Save the current selection
   WriteSaveData("selection", (windowIconButtons ~= nil and editorUI:ToggleGroupSelections(windowIconButtons)[1] or 0))
 
+  -- Tell the system to save all active disks
+  -- SaveActiveDisks()
 
 end
 

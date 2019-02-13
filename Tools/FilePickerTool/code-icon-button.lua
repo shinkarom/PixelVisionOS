@@ -57,6 +57,8 @@ function EditorUI:CreateIconButton(rect, spriteName, label, toolTip, bgColor)
   -- Modify the hit rect to the new rect position
   data.hitRect = {x = data.rect.x + 12, y = data.rect.y, w = data.rect.w, h = data.rect.h}
 
+  -- TODO the size isn't correct since the icon sits inside of the 48x40 pixel area
+
   return data
 
 end
@@ -65,6 +67,11 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
 
   local size = NewVector(48, 40)
   data.cachedPixelData = {}
+
+  -- TODO need to resize the button to match the correct dimensions
+
+  -- TODO need to create a new state for dragging with transparent background
+
   local states = {"up", "openup", "selectedup", "disabled"}--, "selectedup", "openup"}
 
   for i = 1, #states do
@@ -73,7 +80,7 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
     local canvas = NewCanvas(size.x, size.y)
 
     -- Clear the canvas to the default background color
-    canvas:Clear()
+    canvas:Clear(-1)
 
     -- Get the background color
     local bgColor = data.bgDrawArgs[5]
@@ -436,6 +443,8 @@ function EditorUI:CreateIconGroup(singleSelection)
   data.singleSelection = singleSelection
   -- }
 
+  data.drawIconArgs = {nil, 0, 0, 48, 40, false, false, DrawMode.Sprite}
+
   return data
 
 end
@@ -468,6 +477,10 @@ function EditorUI:IconGroupAddButton(data, buttonData, id)
   -- save the button data
   table.insert(data.buttons, id, buttonData)
 
+  self.collisionManager:EnableDragging(buttonData, .5, data.name)
+
+  buttonData.id = id
+
   -- Attach a new onAction to the button so it works within the group
   buttonData.onAction = function()
 
@@ -479,11 +492,23 @@ function EditorUI:IconGroupAddButton(data, buttonData, id)
     self:SelectIconButton(data, id)
     -- end
 
+    -- Clear
+    buttonData.dragging = false
+
   end
 
   buttonData.onTrigger = function()
 
     self:TriggerIconButton(data, id)
+  end
+
+
+  buttonData.onPress = function(value)
+    print("On Press")
+    if(buttonData.onStartDrag ~= nil) then
+      buttonData.onStartDrag(buttonData)
+    end
+
   end
 
   -- Invalidate the button so it redraws
@@ -524,6 +549,73 @@ function EditorUI:UpdateIconGroup(data)
 
     btn = data.buttons[i]
 
+
+    if(btn.dragging == true and btn.dragDelay > 0 and self.collisionManager.dragTime > btn.dragDelay) then
+
+      if(self.collisionManager.mouseDown == false) then
+        btn.dragging = false
+        print("Release dragging icon")
+
+        if(btn.onEndDrag ~= nil) then
+          print("On End Drag")
+          btn.onEndDrag(btn)
+        end
+
+      else
+
+        -- TODO need to only select the amount of pixel data we need to avoid wrapping
+
+        if(self.collisionManager.mousePos.x > -1 and self.collisionManager.mousePos.y > -1) then
+          local clipSize = {x = 0, y = 0, w = 48, h = 40}
+
+          -- Calculate mask
+          local displaySize = Display()
+
+          displaySize.x = displaySize.x - 1
+          -- TODO think this is a bug in the display size, it shouldn't need to subtract 9, just 1 like the width
+          displaySize.y = displaySize.y - 9
+          -- displaySize.width = displaySize.width - 1
+          -- displaySize.y = displaySize.y - 9
+
+          if((self.collisionManager.mousePos.x + (clipSize.w/2)) > displaySize.x) then
+            clipSize.w = clipSize.w - ((self.collisionManager.mousePos.x + (clipSize.w/2)) - displaySize.x)
+          elseif((self.collisionManager.mousePos.x - (clipSize.w/2)) < 1) then
+            clipSize.w = 0 -- TODO need to figure out what to crop
+          end
+
+          if((self.collisionManager.mousePos.y + (clipSize.h/2)) > displaySize.y) then
+            clipSize.h = clipSize.h - ((self.collisionManager.mousePos.y + (clipSize.h/2)) - displaySize.y)
+          elseif((self.collisionManager.mousePos.y - (clipSize.h/2)) < 0) then
+              clipSize.h = 0
+          end
+
+
+          data.drawIconArgs[1] = btn.cachedPixelData["up"]:SamplePixels(clipSize.x, clipSize.y, clipSize.w, clipSize.h)
+          data.drawIconArgs[2] = self.collisionManager.mousePos.x - 24
+          data.drawIconArgs[3] = self.collisionManager.mousePos.y - 12
+          data.drawIconArgs[4] = clipSize.w
+          data.drawIconArgs[5] = clipSize.h
+
+          -- DrawPixels(btn.cachedPixelData["up"], 0,0)
+          self:NewDraw("DrawPixels", data.drawIconArgs)
+        end
+
+        -- TODO need to see if we are over another icon button and temporarily select it
+        -- self:ClearIconGroupSelections(data)
+        -- -- Automatically select any button we are dragging
+        -- self:SelectIconButton(data, btn.id, false)
+
+      end
+
+      -- print("Dragging", btn.name, btn.dragging)
+
+
+
+    end
+    -- if(btn.dragging == true) then
+    --   data.dragTarget = btn
+    --   -- print(btn.name, btn.dragging)
+    -- end
     self:UpdateIconButton(btn)
 
   end
