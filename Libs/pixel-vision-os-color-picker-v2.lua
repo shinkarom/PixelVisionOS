@@ -28,6 +28,8 @@ function PixelVisionOS:CreateColorPicker(rect, tileSize, total, totalPerPage, ma
   data.name = "ColorPicker" .. data.name
 
   data.totalPerPage = totalPerPage
+
+  data.visiblePerPage = totalPerPage
   data.colorOffset = colorOffset
   data.tileSize = tileSize
   data.maxPages = maxPages
@@ -186,7 +188,7 @@ function PixelVisionOS:OnColorPageClick(data, pageID, select)
 
   local maxTotal = pageID * data.totalPerPage
 
-  local newTotal = data.totalPerPage
+  local newTotal = math.min(data.totalPerPage, data.visiblePerPage)
 
   if(maxTotal > data.total) then
     newTotal = newTotal - (maxTotal - data.total)
@@ -320,7 +322,7 @@ function PixelVisionOS:DrawColorPage(data, page)
   local startID = data.colorOffset - 1
   local total = data.picker.total
   local pageOffset = page
-  local totalPerPage = data.totalPerPage
+  -- local totalPerPage = data.totalPerPage
   local rect = data.rect
   local tileSize = data.tileSize
 
@@ -343,10 +345,12 @@ function PixelVisionOS:DrawColorPage(data, page)
     x = (index % width) * tileSize.x + rect.x
     y = math.floor(index / width) * tileSize.y + rect.y
 
-    local pageOffset = ((pageOffset - 1) * totalPerPage)
+    local pageOffset = ((pageOffset - 1) * data.totalPerPage)
     local colorID = i + pageOffset
 
-    if(i <= total) then
+    -- TODO need to make sure the total is never greater than then the visible per page value
+
+    if(i <= total and i <= data.visiblePerPage) then
 
       -- Shift the color ID over to the correct position
       colorID = colorID + startID
@@ -371,44 +375,44 @@ function PixelVisionOS:DrawColorPage(data, page)
 
 end
 
-function PixelVisionOS:RebuildColorPage(colors, page, colorsPerPage, rect, tileSize)
-
-  local totalPixels = tileSize.x * tileSize.y
-  local width = math.floor(rect.width / tileSize.x)
-  local height = math.floor(rect.height / tileSize.y)
-
-  local total = width * height
-
-  local pixelData = {}
-
-  local x = 0
-  local y = 0
-
-  for i = 1, total do
-
-    -- Lua loops start at 1 but we need to start at 0
-    index = i - 1
-
-    x = (index % width) * tileSize.x + rect.x
-    y = math.floor(index / width) * tileSize.y + rect.y
-
-    if(i <= colorsPerPage) then
-
-      local pageOffset = ((page - 1) * colorsPerPage)
-      local colorID = i + pageOffset
-
-      for j = 1, totalPixels do
-        pixelData[j] = colors[colorID] -- TODO need to change the offset based on the page
-      end
-
-      DrawPixels(pixelData, x, y, tileSize.x, tileSize.y, false, false, DrawMode.TilemapCache, 0)
-    else
-      DrawSprites(emptycolor.spriteIDs, x, y, emptycolor.width, false, false, DrawMode.TilemapCache)
-    end
-
-  end
-
-end
+-- function PixelVisionOS:RebuildColorPage(colors, page, colorsPerPage, rect, tileSize)
+--
+--   local totalPixels = tileSize.x * tileSize.y
+--   local width = math.floor(rect.width / tileSize.x)
+--   local height = math.floor(rect.height / tileSize.y)
+--
+--   local total = width * height
+--
+--   local pixelData = {}
+--
+--   local x = 0
+--   local y = 0
+--
+--   for i = 1, total do
+--
+--     -- Lua loops start at 1 but we need to start at 0
+--     index = i - 1
+--
+--     x = (index % width) * tileSize.x + rect.x
+--     y = math.floor(index / width) * tileSize.y + rect.y
+--
+--     if(i <= colorsPerPage) then
+--
+--       local pageOffset = ((page - 1) * colorsPerPage)
+--       local colorID = i + pageOffset
+--
+--       for j = 1, totalPixels do
+--         pixelData[j] = colors[colorID] -- TODO need to change the offset based on the page
+--       end
+--
+--       DrawPixels(pixelData, x, y, tileSize.x, tileSize.y, false, false, DrawMode.TilemapCache, 0)
+--     else
+--       DrawSprites(emptycolor.spriteIDs, x, y, emptycolor.width, false, false, DrawMode.TilemapCache)
+--     end
+--
+--   end
+--
+-- end
 
 function PixelVisionOS:ClearColorPickerSelection(data)
 

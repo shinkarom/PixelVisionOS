@@ -257,7 +257,7 @@ function Init()
       {x = 8, y = 184, w = 128, h = 32},
       {x = 16, y = 16},
       pixelVisionOS.totalPaletteColors,
-      pixelVisionOS.paletteColorsPerPage,
+      16,
       8,
       pixelVisionOS.colorOffset + pixelVisionOS.totalPaletteColors,
       "itempicker",
@@ -265,6 +265,9 @@ function Init()
       false,
       true
     )
+
+    -- Force the palette picker to only display the total colors per sprite
+    paletteColorPickerData.visiblePerPage = pixelVisionOS.paletteColorsPerPage
 
     paletteColorPickerData.onColorPress = function(value)
       ForcePickerFocus(paletteColorPickerData)
@@ -304,59 +307,24 @@ function Init()
       spritePickerData.colorOffset = pixelVisionOS.colorOffset + pixelVisionOS.totalPaletteColors + ((value - 1) * 16)
 
       pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
-      -- local valA = 128 + ((value - 1) * 16)
-      -- local valB = PaletteOffset(value - 1)
-      --
-      -- print("CHANGE COLOR OFFSET OF SPRITES", value, valA, valB)
-      -- Change the palette offset value
-      -- spritePickerData.colorOffset = pixelVisionOS.gameColorOffset-- + PaletteOffset(value - 1)--128 + ((value - 1) * 16)--PaletteOffset(value)
-      --pixelVisionOS.gameColorOffset + ((value - 1) * paletteColorPickerData.totalPerPage)
 
-      -- pixelVisionOS:OnSpritePageClick(spritePickerData, spritePickerData.pages.currentSelection)
     end
-
-    -- -- Need to convert sprites per page to editor's sprites per page value
-    -- local spritePages = math.floor(gameEditor:TotalSprites() / 192)
-    --
-    -- if(gameEditor:Name() == ReadSaveData("editing", "undefined")) then
-    --   lastSystemColorSelection = tonumber(ReadSaveData("systemColorSelection", "0"))
-    --   -- lastTab = tonumber(ReadSaveData("tab", "1"))
-    --   -- lastSelection = tonumber(ReadSaveData("selected", "0"))
-    -- end
-    -- --
-    -- -- If we are opening a file, override the last tab selected
-    -- -- local file = ReadMetaData("fileName", "colors.png") -- Load colors.png by default
-    -- --
-    -- -- if(file == "colors.png") then
-    -- --   lastTab = 1
-    -- --   lastSelection = 0
-    -- -- elseif(file == "color-map.png") then
-    -- --   lastTab = 2
-    -- --   lastSelection = 0
-    -- -- elseif(file == "flags.png") then
-    -- --   lastTab = 3
-    -- --   lastSelection = 0
-    -- -- end
-    --
 
     pixelVisionOS:SelectColorPage(systemColorPickerData, 1)
 
     pixelVisionOS:SelectSpritePickerPage(spritePickerData, 1)
 
+    RedrawPaletteUI()
+
     if(usePalettes == true) then
       pixelVisionOS:SelectColorPage(paletteColorPickerData, 1)
     end
 
-    -- Set the focus mode to none
-    ForcePickerFocus()
-
     -- Reset the validation to update the title and set the validation flag correctly for any changes
     ResetDataValidation()
 
-    RedrawPaletteUI()
-
-    -- TODO Only hide this when in direct color mode
-    -- DrawRect(136, 220, 3, 9, BackgroundColor(), DrawMode.TilemapCache)
+    -- Set the focus mode to none
+    ForcePickerFocus()
 
   else
 
@@ -407,42 +375,49 @@ function OnPalettePickerDrop(src, dest)
     if(usePalettes == false) then
 
       -- We want to manually toggle the palettes before hand so we can add the first color before calling the AddPalettePage()
-      TogglePaletteMode(true, function() OnAddDroppedColor(id, dest) end)
+      TogglePaletteMode(true, function() OnAddDroppedColor(id, dest, srcHex) end)
 
     else
 
-      OnAddDroppedColor(id, dest)
+      OnAddDroppedColor(id, dest, srcHex)
     end
+  else
+    print("Swap colors")
+
+    OnSystemColorDropTarget(src, dest)
 
   end
 
 
 end
 
-function OnAddDroppedColor(id, dest)
+function OnAddDroppedColor(id, dest, color)
 
   -- Make sure we only add colors to the end of the palette
-  if(id >= dest.totalPerPage) then
+  if(id >= dest.visiblePerPage) then
 
     -- Set the ID to the last value so it is added to the end
-    id = dest.totalPerPage
-
-    -- print("Add Palette Color To End", id)
+    id = dest.visiblePerPage
 
     -- Update the picker's total and total per page for the new item
     dest.total = dest.total + dest.totalPages
-    dest.totalPerPage = dest.totalPerPage + 1
+    dest.visiblePerPage = dest.visiblePerPage + 1
 
     -- Increase the colors per sprite value
-    gameEditor:ColorsPerSprite(dest.totalPerPage)
+    gameEditor:ColorsPerSprite(dest.visiblePerPage)
 
     -- Invalidate since we increased the color per sprite
     InvalidateData()
 
   end
 
+  local index = pixelVisionOS.colorOffset + 128 + (dest.pages.currentSelection - 1) * dest.totalPerPage + (id - 1)
+
+  print("Add color", index, id, color)
+
+  Color(index, color)
   -- Add the new color to the palette
-  AddColorToPalette(dest.pages.currentSelection, id, srcHex)
+  -- AddColorToPalette(dest.pages.currentSelection, id, color)
 
   -- pixelVisionOS:CopyPaletteColorsToMemory()
 
@@ -471,8 +446,8 @@ function OnSystemColorDropTarget(src, dest)
     if(sourceColorID ~= destColorID) then
 
       -- Need to shift src and dest ids based onthe color offset
-      local realSrcID = sourceColorID + systemColorPickerData.colorOffset
-      local realDestID = destColorID + systemColorPickerData.colorOffset
+      local realSrcID = sourceColorID + src.colorOffset
+      local realDestID = destColorID + dest.colorOffset
 
       -- Get the src and dest color hex value
       local srcColor = Color(realSrcID)
@@ -491,10 +466,10 @@ function OnSystemColorDropTarget(src, dest)
         Color(realDestID, srcColor)
 
         -- Select the new color spot
-        pixelVisionOS:SelectColorPickerColor(systemColorPickerData, destColorID)
+        pixelVisionOS:SelectColorPickerColor(dest, destColorID)
 
         -- Redraw the color page
-        pixelVisionOS:DrawColorPage(systemColorPickerData)
+        pixelVisionOS:DrawColorPage(dest)
 
         pixelVisionOS:DisplayMessage("Color ID '"..srcColor.."' was swapped with Color ID '"..destColor .."'", 5)
 
@@ -829,7 +804,7 @@ end
 
 function RedrawPaletteUI()
 
-  if(pixelVisionOS.paletteMode == true) then
+  if(usePalettes == true) then
 
     -- Draw edge
     DrawSprites(pickerbottompageedge.spriteIDs, 136 / 8, 216 / 8, pickerbottompageedge.width, false, false, DrawMode.Tile)
@@ -1097,7 +1072,7 @@ function UpdateHexColor(value)
   -- Shift the color based on the component's offset
   -- colorID =
 
-  print("Color mode", pixelVisionOS.paletteMode)
+  -- print("Color mode", pixelVisionOS.paletteMode)
 
 
   local currentColor = Color(realColorID)
@@ -1123,7 +1098,7 @@ function UpdateHexColor(value)
   else
 
     -- Only block duplicated colors when palette mode is set to true
-    if(pixelVisionOS.paletteMode == true) then
+    if(usePalettes == true) then
 
       -- Make sure the color isn't duplicated
       for i = 1, pixelVisionOS.totalSystemColors do
@@ -1331,7 +1306,7 @@ function Update(timeDelta)
       pixelVisionOS:UpdateColorPicker(systemColorPickerData)
 
       -- Only update the palette color picker when we are in palette mode
-      if(pixelVisionOS.paletteMode == true) then
+      if(usePalettes == true) then
         pixelVisionOS:UpdateColorPicker(paletteColorPickerData)
       end
 

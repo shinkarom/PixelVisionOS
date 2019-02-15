@@ -89,7 +89,7 @@ function Init()
   else
 
     -- Load only the game data we really need
-    success = gameEditor.Load(rootDirectory, {SaveFlags.System, SaveFlags.Colors, SaveFlags.ColorMap, SaveFlags.Sprites}) -- colorEditor:LoadTmpEngine()
+    success = gameEditor.Load(rootDirectory, {SaveFlags.System, SaveFlags.Meta, SaveFlags.Colors, SaveFlags.ColorMap, SaveFlags.Sprites}) -- colorEditor:LoadTmpEngine()
 
   end
 
@@ -226,20 +226,25 @@ function Init()
       "Select a color."
     )
 
+    if(usePalettes == true) then
+      -- Force the palette picker to only display the total colors per sprite
+      paletteColorPickerData.visiblePerPage = pixelVisionOS.paletteColorsPerPage
+    end
+
     paletteColorPickerData.onColorPress = function(value)
 
       -- if we are in palette mode, just get the currents selection. If we are in direct color mode calculate the real color index
-      value = usePalettes and paletteColorPickerData.picker.selected or pixelVisionOS:CalculateRealColorIndex(paletteColorPickerData, value)
-
-      -- Make sure if we select the last color, we mark it as the mask color
-      if(value == paletteColorPickerData.total - 1) then
-        value = -1
-      end
-
-      lastColorID = value
-
-      -- Set the canvas brush color
-      editorUI:CanvasBrushColor(canvasData, value)
+      -- value = usePalettes and paletteColorPickerData.picker.selected or pixelVisionOS:CalculateRealColorIndex(paletteColorPickerData, value)
+      --
+      -- -- Make sure if we select the last color, we mark it as the mask color
+      -- if(value == paletteColorPickerData.total - 1) then
+      --   value = -1
+      -- end
+      --
+      -- lastColorID = value
+      --
+      -- -- Set the canvas brush color
+      -- editorUI:CanvasBrushColor(canvasData, value)
 
     end
 
@@ -250,7 +255,7 @@ function Init()
       if(usePalettes == true) then
 
         -- Calculate the new color offset
-        local newColorOffset = colorOffset + ((value - 1) * paletteColorPickerData.totalPerPage)
+        local newColorOffset = pixelVisionOS.colorOffset + pixelVisionOS.totalPaletteColors + ((value - 1) * 16)
 
         -- Update the sprite picker color offset
         spritePickerData.colorOffset = newColorOffset
@@ -259,11 +264,13 @@ function Init()
         -- Update the canvas color offset
         canvasData.colorOffset = newColorOffset
 
-        pixelVisionOS:OnSpritePageClick(spritePickerData, spritePickerData.pages.currentSelection)
+        pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
+
+        -- pixelVisionOS:OnSpritePageClick(spritePickerData, spritePickerData.pages.currentSelection)
 
         UpdateCanvas(lastSelection)
 
-        editorUI:SelectPicker(paletteColorPickerData.picker, lastColorID)
+        -- editorUI:SelectPicker(paletteColorPickerData.picker, lastColorID)
 
       end
 
@@ -689,7 +696,8 @@ function OnSelectTool(value)
     -- Need to find the right color if we are in palette mode
     if(usePalettes == true) then
 
-      lastColorID = last
+      -- TODO this is not working
+      -- lastColorID = last
 
     end
 
