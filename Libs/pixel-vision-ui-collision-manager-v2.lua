@@ -130,7 +130,7 @@ function CollisionManager:StartDrag(source)
 end
 
 function CollisionManager:EndDrag(source)
-print("End Drag Call", #self.dragTargets)
+  -- print("End Drag Call", #self.dragTargets)
   if(self.currentDragSource == nil) then
     return
   end
@@ -146,7 +146,7 @@ print("End Drag Call", #self.dragTargets)
     if(self:MouseInRect(dest.rect)) then
 
       if(dest.onDropTarget ~= nil) then
-        print(source.name, "Drop On", dest.name)
+        -- print(source.name, "Drop On", dest.name)
         dest.onDropTarget(source, dest)
       end
 
@@ -163,9 +163,9 @@ function CollisionManager:EnableDragging(target, dragDelay, type)
   target.dragDelay = dragDelay or .5
   target.dragging = false
 
-  print("Enable Drag", target.name)
+  -- print("Enable Drag", target.name)
   target.onStartDrag = function(data)
-    print("Start drag")
+    -- print("Start drag")
     self:StartDrag(target)
   end
 

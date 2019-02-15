@@ -42,7 +42,7 @@ function PixelVisionOS:Init()
   -- Create message bar instance
   _pixelVisionOS.messageBar = _pixelVisionOS:CreateMessageBar(7, 230, 60)
 
-  _pixelVisionOS.version = "v2.2"
+  _pixelVisionOS.version = "v2.3"
 
   return _pixelVisionOS
 

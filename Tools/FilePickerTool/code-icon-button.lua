@@ -72,20 +72,23 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
 
   -- TODO need to create a new state for dragging with transparent background
 
-  local states = {"up", "openup", "selectedup", "disabled"}--, "selectedup", "openup"}
+  local states = {"up", "openup", "selectedup", "disabled", "dragging"}--, "selectedup", "openup"}
 
   for i = 1, #states do
 
     local state = states[i]
     local canvas = NewCanvas(size.x, size.y)
 
+    -- Change the sprite state to accommodate for the fact that there is no dragging sprite
+    local spriteState = state == "dragging" and "up" or state
+
     -- Clear the canvas to the default background color
     canvas:Clear(-1)
 
     -- Get the background color
-    local bgColor = data.bgDrawArgs[5]
+    local bgColor = state ! = "dragging" and data.bgDrawArgs[5] or - 1
 
-    -- Set the stroke and pattern
+    -- Set the stroke and pattern to clear any previous icon this draws over
     canvas:SetStroke({bgColor}, 1, 1)
     canvas:SetPattern({bgColor}, 1, 1)
 
@@ -99,7 +102,7 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
       spriteName = "fileunknown"
     end
 
-    local spriteData = _G[spriteName .. state]
+    local spriteData = _G[spriteName .. spriteState]
 
     if(spriteData ~= nil) then
       -- print("spriteName", spriteName, spriteData ~= nil)
@@ -122,10 +125,6 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
       -- print("Total Chars", #text)
       for i = 1, #text do
 
-        -- if(counter == 0) then
-        --
-        -- end
-
         lines[#lines] = lines[#lines] .. text:sub(i, i):upper()
 
         if(i % maxWidth == 0 and i ~= #text)then
@@ -134,17 +133,8 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
 
       end
 
-
-      -- local lines = SplitLines(WordWrap(text, 48))
-
-
       -- Clear the area for the text
       canvas:DrawSquare(0, 24, size.x - 2, 24 + 14, true)
-
-
-      -- TODO draw background for text if selected
-
-      -- print(text, "Lines", #lines, lines[1], #lines[1])
 
       for i = 1, #lines do
 
@@ -158,6 +148,10 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
         local y = ((i - 1) * 6) + 24
 
         local textColor = state == "up" and 0 or 15
+
+        if(state == "dragging") then
+          textColor = 15
+        end
 
         if(state == "disabled") then
           textColor = 12
@@ -176,8 +170,6 @@ function EditorUI:CreateIconButtonStates(data, spriteName, text)
         canvas:DrawText(line, x, y, "medium", textColor, - 4)
 
       end
-
-      -- print(data.name, "state", state)
 
       data.cachedPixelData[states[i]] = canvas
 
@@ -504,7 +496,7 @@ function EditorUI:IconGroupAddButton(data, buttonData, id)
 
 
   buttonData.onPress = function(value)
-    print("On Press")
+    -- print("On Press")
     if(buttonData.onStartDrag ~= nil) then
       buttonData.onStartDrag(buttonData)
     end
@@ -554,10 +546,10 @@ function EditorUI:UpdateIconGroup(data)
 
       if(self.collisionManager.mouseDown == false) then
         btn.dragging = false
-        print("Release dragging icon")
+        -- print("Release dragging icon")
 
         if(btn.onEndDrag ~= nil) then
-          print("On End Drag")
+          -- print("On End Drag")
           btn.onEndDrag(btn)
         end
 
@@ -565,7 +557,7 @@ function EditorUI:UpdateIconGroup(data)
 
         -- TODO need to only select the amount of pixel data we need to avoid wrapping
 
-        if(self.collisionManager.mousePos.x > -1 and self.collisionManager.mousePos.y > -1) then
+        if(self.collisionManager.mousePos.x > - 1 and self.collisionManager.mousePos.y > - 1) then
           local clipSize = {x = 0, y = 0, w = 48, h = 40}
 
           -- Calculate mask
@@ -577,20 +569,19 @@ function EditorUI:UpdateIconGroup(data)
           -- displaySize.width = displaySize.width - 1
           -- displaySize.y = displaySize.y - 9
 
-          if((self.collisionManager.mousePos.x + (clipSize.w/2)) > displaySize.x) then
-            clipSize.w = clipSize.w - ((self.collisionManager.mousePos.x + (clipSize.w/2)) - displaySize.x)
-          elseif((self.collisionManager.mousePos.x - (clipSize.w/2)) < 1) then
+          if((self.collisionManager.mousePos.x + (clipSize.w / 2)) > displaySize.x) then
+            clipSize.w = clipSize.w - ((self.collisionManager.mousePos.x + (clipSize.w / 2)) - displaySize.x)
+          elseif((self.collisionManager.mousePos.x - (clipSize.w / 2)) < 1) then
             clipSize.w = 0 -- TODO need to figure out what to crop
           end
 
-          if((self.collisionManager.mousePos.y + (clipSize.h/2)) > displaySize.y) then
-            clipSize.h = clipSize.h - ((self.collisionManager.mousePos.y + (clipSize.h/2)) - displaySize.y)
-          elseif((self.collisionManager.mousePos.y - (clipSize.h/2)) < 0) then
-              clipSize.h = 0
+          if((self.collisionManager.mousePos.y + (clipSize.h / 2)) > displaySize.y) then
+            clipSize.h = clipSize.h - ((self.collisionManager.mousePos.y + (clipSize.h / 2)) - displaySize.y)
+          elseif((self.collisionManager.mousePos.y - (clipSize.h / 2)) < 0) then
+            clipSize.h = 0
           end
 
-
-          data.drawIconArgs[1] = btn.cachedPixelData["up"]:SamplePixels(clipSize.x, clipSize.y, clipSize.w, clipSize.h)
+          data.drawIconArgs[1] = btn.cachedPixelData["dragging"]:SamplePixels(clipSize.x, clipSize.y, clipSize.w, clipSize.h)
           data.drawIconArgs[2] = self.collisionManager.mousePos.x - 24
           data.drawIconArgs[3] = self.collisionManager.mousePos.y - 12
           data.drawIconArgs[4] = clipSize.w

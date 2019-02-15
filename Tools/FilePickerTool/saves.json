@@ -1,12 +1,12 @@
 {
-    
-    "GameChip":
-    {
-        "savedData":{
-            "lastPath": "none",
-            "sessionID": "201902122050266113",
-            "scrollPos": "0",
-            "selection": "0"
+        
+        "GameChip":
+        {
+            "savedData":{
+                "selection": "5",
+                "scrollPos": "0",
+                "sessionID": "201902142030285380",
+                "lastPath": "/Disks/EmptyDisk/ColorShiftTutorial/"
+            }
         }
     }
-}

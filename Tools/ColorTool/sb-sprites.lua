@@ -66,6 +66,9 @@ pagebuttonminusover={width=1,spriteIDs={121,133}}
 pagebuttonminusselectedup={width=1,spriteIDs={81,98}}
 pagebuttonminusup={width=1,spriteIDs={81,98}}
 palettepickerbackground={width=16,spriteIDs={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}
+palettepickerbottom={width=1,spriteIDs={122,134}}
+pickerbottompageedge={width=1,spriteIDs={227,233}}
+pickerbottompage={width=1,spriteIDs={249,134}}
 pv8toolbaricondown={width=2,spriteIDs={35,36,56,57}}
 pv8toolbariconup={width=2,spriteIDs={82,83,2,99}}
 tilemapv2_64={width=3,spriteIDs={181,182,183,191,192,193}}

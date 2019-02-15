@@ -38,7 +38,9 @@ function PixelVisionOS:ImportColorsFromGame()
   end
 
   -- Set the color mode
-  self.paletteMode = gameEditor:PaletteMode()
+  self.paletteMode = gameEditor:ReadMetaData("paletteMode", "false") == "true"
+
+  print("Palette Mode", self.paletteMode)
 
   -- Calculate the total available system colors based on the palette mode
   self.totalSystemColors = self.paletteMode and self.totalColors / 2 or self.totalColors
@@ -47,13 +49,13 @@ function PixelVisionOS:ImportColorsFromGame()
   self.totalSystemColors = self.totalSystemColors - 1
 
   -- There are always 128 total palette colors in memory
-  self.totalPaletteColors = 128
+  self.totalPaletteColors = 0
 
   -- We display 64 system colors per page
   self.systemColorsPerPage = 64
 
   -- We display 16 palette colors per page
-  self.paletteColorsPerPage = 16
+  self.paletteColorsPerPage = Clamp(gameEditor:ColorsPerSprite() + 1, 2, 16)
 
   -- We need to copy over all of the game's colors to the tools color memory.
 
@@ -91,12 +93,61 @@ function PixelVisionOS:ImportColorsFromGame()
 
     end
 
+    -- print("Import Color From", index)
+
+  end
+
+  self.paletteColors = {}
+
+  if(self.paletteMode == true) then
+
+    -- local paletteCounter = 0
+
+    for i = self.totalSystemColors + 2, self.totalColors do
+
+      local index = i - 1
+
+      -- get the game color at the current index
+      local color = gameColors[i]
+
+      local colorID = color == self.maskColor and - 1 or table.indexOf(self.systemColors, color)
+
+      -- print("Import Palette Color From", index, color, colorID)
+
+      Color(index + self.colorOffset, color)
+
+      -- Add the system color to the table
+      table.insert(self.paletteColors, colorID)
+
+      -- if(color ~= self.maskColor) then
+      --   paletteCounter = paletteCounter + 1
+      -- end
+
+      -- if(i%16 == 0) then
+      --
+      --   if(paletteCounter > self.paletteColorsPerPage) then
+      --     self.paletteColorsPerPage = paletteCounter + 1
+      --   end
+      --
+      --   paletteCounter = 0
+      --
+      -- end
+
+    end
+
   end
 
   -- TODO there should always be at least one transparent color at the end of the system color list
 
   -- Update the system color total to match the unique colors found plus 1 for the last color to be empty
   self.totalSystemColors = #self.systemColors + 1
+
+  -- Add up the palette colors
+  self.totalPaletteColors = #self.paletteColors
+
+  -- Need to import palettes
+
+
 
   --
   -- -- Set the color mode

@@ -166,7 +166,7 @@ function Init()
     colorOffset = pixelVisionOS.colorOffset
 
     -- Check the game editor if palettes are being used
-    usePalettes = gameEditor:PaletteMode()
+    usePalettes = pixelVisionOS.paletteMode
 
     if(usePalettes == true) then
       totalColors = 128
