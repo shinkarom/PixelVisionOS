@@ -1,12 +1,12 @@
 {
-    
-    "GameChip":
-    {
-        "savedData":{
-            "lastPath": "/Disks/PixelVisionOS/Templates/PV8System/",
-            "sessionID": "201902160654200601",
-            "scrollPos": "0",
-            "selection": "4"
-        }
+
+"GameChip":
+{
+    "savedData":{
+        "selection": "9",
+        "scrollPos": "0",
+        "sessionID": "201902161407081668",
+        "lastPath": "/Disks/EmptyDisk/PaletteTest/"
     }
+}
 }

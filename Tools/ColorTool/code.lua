@@ -80,11 +80,16 @@ function Init()
   -- Disable the back key in this tool
   EnableBackKey(false)
 
+
+
   -- Create an instance of the Pixel Vision OS
   pixelVisionOS = PixelVisionOS:Init()
 
   -- Get a reference to the Editor UI
   editorUI = pixelVisionOS.editorUI
+
+  -- Reset the undo history so it's ready for the tool
+  pixelVisionOS:ResetUndoHistory()
 
   rootDirectory = ReadMetaData("directory", nil)
 
@@ -271,6 +276,7 @@ function Init()
 
     paletteColorPickerData.onColorPress = function(value)
       ForcePickerFocus(paletteColorPickerData)
+
       -- StartPickerDrag(systemColorPickerData.picker)
     end
 
@@ -523,6 +529,8 @@ function ForcePickerFocus(src)
     pixelVisionOS:EnableMenuItem(EditShortcut, false)
     pixelVisionOS:EnableMenuItem(DeleteShortcut, false)
     pixelVisionOS:EnableMenuItem(RevertShortcut, false)
+    pixelVisionOS:EnableMenuItem(CopyShortcut, false)
+    pixelVisionOS:EnableMenuItem(PasteShortcut, false)
 
   elseif(src.name == systemColorPickerData.name) then
 
@@ -536,7 +544,10 @@ function ForcePickerFocus(src)
     ToggleHexInput(true)
 
     -- Enable edit option
-    pixelVisionOS:EnableMenuItem(EditShortcut, true)
+    -- TODO need to enable this when the color pick modal exists
+    pixelVisionOS:EnableMenuItem(EditShortcut, false)
+
+    pixelVisionOS:EnableMenuItem(CopyShortcut, true)
 
   elseif(src.name == paletteColorPickerData.name) then
 
@@ -554,18 +565,68 @@ function ForcePickerFocus(src)
     pixelVisionOS:EnableMenuItem(DeleteShortcut, false)
     pixelVisionOS:EnableMenuItem(RevertShortcut, false)
 
-  end
-
-  -- Test to see if the mode has changed
-  if(lastMode ~= selectionMode) then
-
-    -- Clear the selection and color from the previous mode
-    lastSelection = value
-    lastColor = colorHex
+    pixelVisionOS:EnableMenuItem(CopyShortcut, true)
 
   end
+
+  lastMode = selectionMode
+  --
+  -- -- Test to see if the mode has changed
+  -- if(lastMode ~= selectionMode) then
+  --
+  --   -- Clear the selection and color from the previous mode
+  --   lastSelection = value
+  --   lastColor = colorHex
+  --
+  --
+  -- end
 
 end
+
+local copyValue = nil
+
+function OnCopy()
+
+  local src = lastMode == 1 and systemColorPickerData or paletteColorPickerData
+
+  local colorID = pixelVisionOS:CalculateRealColorIndex(src) + src.colorOffset
+
+  copyValue = Color(colorID)
+
+  print("OnCopy", lastMode, src.name, colorID, copyValue)
+
+  pixelVisionOS:EnableMenuItem(PasteShortcut, true)
+
+end
+
+function OnPaste()
+
+  if(copyValue == nil) then
+    return
+  end
+
+  local src = lastMode == 1 and systemColorPickerData or paletteColorPickerData
+
+  local colorID = pixelVisionOS:CalculateRealColorIndex(systemColorPickerData)
+
+  -- TODO need to use the correct color setting methods so adding works correctly
+  --
+
+  if(lastMode == 1) then
+    -- print("Paste System Color", string.sub(copyValue, 2, 7))
+    UpdateHexColor(string.sub(copyValue, 2, 7))
+    -- AddSystemColor(colorID, copyValue)
+  else
+    Color(colorID, copyValue)
+  end
+
+  InvalidateData()
+
+  pixelVisionOS:EnableMenuItem(CopyShortcut, false)
+  pixelVisionOS:EnableMenuItem(PasteShortcut, false)
+
+end
+
 
 function ToggleHexInput(value)
   editorUI:Enable(colorHexInputData, value)
@@ -581,67 +642,6 @@ function ToggleHexInput(value)
     editorUI:ChangeInputField(colorHexInputData, string.sub(pixelVisionOS.maskColor, 2, 7), false)
   end
 end
-
-
-
--- function AddPalettePage(data)
---
---   -- print("Add Palette Page")
---
---   -- If we are not using palettes, we need to warn the user before activating it
---   if(usePalettes == false) then
---
---     TogglePaletteMode(true)
---
---   else
---
---     local data = paletteColorPickerData
---
---     -- TODO need to change the pagination to look at data.total not the picker total
---
---     -- print("Data pre total", data.total, data.totalPerPage)
---
---     if(data.totalPerPage == 0) then
---       data.totalPerPage = gameEditor:ColorsPerSprite() + 1
---     end
---
---     -- Increase total colors
---     data.total = data.total + data.totalPerPage
---     data.picker.total = data.totalPerPage
---
---     -- print("Data post total", data.total, data.totalPerPage)
---
---
---     -- When setting up a new palette, we need to copy some colors over so its not empty
---
---     local totalColors = gameEditor:ColorsPerSprite()
---
---     -- print("Adding", totalColors, "to new palette")
---
---     -- Loop through the page and add the first X colors to it
---     for i = 1, totalColors do
---
---       local index = i - 1
---       local tmpColor = Color(pixelVisionOS.colorOffset + index)
---
---       -- print("New Pal Color", tmpColor)
---
---       AddColorToPalette(1, i, tmpColor)
---     end
---
---     pixelVisionOS:RebuildPickerPages(data)
---
---     -- TODO need to select the last page
---     pixelVisionOS:SelectColorPage(data, 1)
---
---     pixelVisionOS:CopyPaletteColorsToMemory()
---
---     pixelVisionOS:OnColorPageClick(data, data.pages.currentSelection)
---
---
---   end
---
--- end
 
 function TogglePaletteMode(value, callback)
 
@@ -780,34 +780,6 @@ function TogglePaletteMode(value, callback)
   end
 
 
-
-  -- -- Reset the palette table
-  -- RebuildPalette()
-  --
-  -- if(value == true) then
-  --
-  --   usePalettes = true
-  --
-  --   print(data.name, "Setting up palette mode")
-  --
-  --   data.picker.total = 1
-  --   data.totalPerPage = 1
-  --
-  --   -- Enable the picker
-  --   editorUI:Enable(data.picker, true)
-  -- else
-  --
-  --   data.picker.total = 0
-  --   data.totalPerPage = 0
-  --
-  --   usePalettes = false
-  --
-  --   -- Disable the picker
-  --   editorUI:Enable(data.picker, false)
-  --   pixelVisionOS:ClearColorPickerSelection(data)
-  --
-  -- end
-
 end
 
 function RedrawPaletteUI()
@@ -837,140 +809,6 @@ function RedrawPaletteUI()
 
 end
 
-function InvalidateSprites()
-
-  spritesInvalid = true;
-
-
-end
-
-function ResetSpriteInvalidation()
-  spritesInvalid = false;
-end
---
--- function RebuildPalette()
---
---   pixelVisionOS.paletteColors = {}
---
---   -- Loop through all the colors and clear
---   for i = 1, pixelVisionOS.totalColors do
---     table.insert(pixelVisionOS.paletteColors, pixelVisionOS.maskColor)
---   end
---
--- end
-
--- function AddColorToPalette(page, id, color)
---
---
---   -- Palette memory is broken up into 16 blocks
---   local totalPerPage = 16
---
---   local offset = (page - 1) * totalPerPage
---
---   -- print("Add Palette Color", page, id, color, offset)
---
---   -- pixelVisionOS.paletteColors[id + offset] = color
---
---   InvalidateData()
---
--- end
-
-function RemoveColorFromPalette(id)
-
-end
-
-function ReplacePaletteColor(color1, color2)
-
-  -- print("Replace Color", color1, "with", color2)
-
-  -- local total = #pixelVisionOS.paletteColors
-  --
-  -- for i = 1, total do
-  --   if(pixelVisionOS.paletteColors[i] == color1) then
-  --     pixelVisionOS.paletteColors[i] = color2
-  --   end
-  -- end
-
-end
-
--- Converts the fixed palette memory into a linear set of game color
-
-
-function RestoreSystemColors()
-
-  -- Clear all of the colors from the palettes
-  -- pixelVisionOS.paletteColors = {}
-
-
-  local total = pixelVisionOS.totalGameColors
-  local startIndex = pixelVisionOS.gameColorOffset - 1
-  local srcIndex = pixelVisionOS.colorOffset - 1
-
-  -- Loop through and copy the colors from the system color blocks to the game color blocks
-  for i = 1, total do
-
-    Color(startIndex + i, Color(srcIndex + i))
-
-  end
-
-end
-
--- function UpdatePageButtonState()
---   editorUI:Enable(palettePageAddData, paletteColorPages < maxPalettePages)
---   editorUI:Enable(palettePageMinusData, paletteColorPages > 0)
--- end
-
--- function RemovePalettePage(data)
---   -- print("Remove Palette Page")
---
---   -- paletteColorPages = paletteColorPages - 1
---   --
---   -- -- Create pages for the palette
---   -- RebuildPages(palettePageData, NewVector(120, 216), paletteColorPages, "Palette page ")
---   --
---   -- -- TODO if the current page is less than the total, move back a page
---
---
---   if(data.totalPages <= 0) then
---
---     -- pixelVisionOS:ShowMessageModal("Disable Palette Mode", "Do you want to disable palette mode? This will remove the palette colors from memory and set the system colors to 256.", 160, true,
---     --   function()
---
---     TogglePaletteMode(false)
---     --
---     --     -- Redraw the background
---     --     DrawSprites(palettepickerbackground.spriteIDs, 1, 23, palettepickerbackground.width, false, false, DrawMode.Tile)
---     --
---     --     RestoreSystemColors()
---     --
---     --   end
---     -- )
---
---   else
---     -- TODO need to clear colors in palette page?
---
---     local lastPage = data.totalPages + 1
---     local totalPerPage = 16
---
---     local offset = lastPage * totalPerPage
---     -- Palettes are fixed at 16 in memory
---     for i = 1, totalPerPage do
---
---       -- pixelVisionOS.paletteColors[i + offset] = pixelVisionOS.maskColor
---
---     end
---
---     pixelVisionOS:CopyPaletteColorsToMemory()
---   end
---
--- end
-
--- function OnSpritePageClick(value)
---
---   RebuildSpritePage(NewRect(152, 32, 96, 128), value, 192, pixelVisionOS.colorOffset + pixelVisionOS.totalSystemColors + paletteOffset)
---
--- end
-
 function OnQuit()
 
   if(invalid == true) then
@@ -995,30 +833,6 @@ function OnQuit()
   end
 
 end
-
--- function CopyToolColorsToGame()
---
---   -- Clear the game's colors
---   gameEditor:ClearColors()
---
---   -- Force the game to have 256 colors
---   gameEditor:ColorPages(4)
---
---   -- Copy over all the new system colors from the tool's memory
---   for i = 1, pixelVisionOS.totalColors do
---
---     -- Calculate the correct color index
---     local index = i - 1
---
---     -- Read the color from the tool's memory starting at the system color offset
---     local newColor = Color(pixelVisionOS.systemColorOffset + index)
---
---     -- Set the game's color to the tool's color
---     gameEditor:Color(index, newColor)
---
---   end
---
--- end
 
 function OnSave()
 
@@ -1076,14 +890,8 @@ function UpdateHexColor(value)
   value = "#".. value
 
   local colorID = pixelVisionOS:CalculateRealColorIndex(systemColorPickerData)
-  -- CalculateRealIndex(systemColorPickerData.picker.selected, systemColorPageData, systemColorsPerPage)
 
   local realColorID = colorID + systemColorPickerData.colorOffset
-  -- Shift the color based on the component's offset
-  -- colorID =
-
-  -- print("Color mode", pixelVisionOS.paletteMode)
-
 
   local currentColor = Color(realColorID)
 
@@ -1165,11 +973,13 @@ function UpdateHexColor(value)
 
     if(usePalettes == true and currentColor ~= pixelVisionOS.maskColor) then
 
-      ReplacePaletteColor(currentColor, newColor)
+      -- TODO need to go through and make sure all the palette colors are updated to reflect the color change
 
-      pixelVisionOS:CopyPaletteColorsToMemory()
-
-      pixelVisionOS:DrawColorPage(paletteColorPickerData)
+      -- ReplacePaletteColor(currentColor, newColor)
+      --
+      -- pixelVisionOS:CopyPaletteColorsToMemory()
+      --
+      -- pixelVisionOS:DrawColorPage(paletteColorPickerData)
 
     end
 
