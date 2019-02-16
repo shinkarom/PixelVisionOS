@@ -40,8 +40,6 @@ function PixelVisionOS:ImportColorsFromGame()
   -- Set the color mode
   self.paletteMode = gameEditor:ReadMetaData("paletteMode", "false") == "true"
 
-  print("Palette Mode", self.paletteMode)
-
   -- Calculate the total available system colors based on the palette mode
   self.totalSystemColors = self.paletteMode and self.totalColors / 2 or self.totalColors
 
@@ -55,7 +53,7 @@ function PixelVisionOS:ImportColorsFromGame()
   self.systemColorsPerPage = 64
 
   -- We display 16 palette colors per page
-  self.paletteColorsPerPage = Clamp(gameEditor:ColorsPerSprite() + 1, 2, 16)
+  self.paletteColorsPerPage = Clamp(gameEditor:ColorsPerSprite(), 2, 16)
 
   -- We need to copy over all of the game's colors to the tools color memory.
 

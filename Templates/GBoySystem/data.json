@@ -1,14 +1,13 @@
 {
     "ColorChip":
     {
-        "pages":1,
+        "pages":4,
         "colorsPerPage":64,
         "maxColors":4,
         "backgroundColor":0,
         "maskColor":"#FF00FF",
         "unique":false,
         "debug":false,
-        "paletteMode":false,
         
     },
     "DisplayChip":
@@ -47,7 +46,7 @@
         "spriteWidth":8,
         "spriteHeight":8,
         "pages":2,
-        "cps":3
+        "cps":4
     },
     "TilemapChip":
     {

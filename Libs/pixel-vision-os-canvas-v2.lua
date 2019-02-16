@@ -558,6 +558,8 @@ end
 
 function EditorUI:GetCanvasPixelData(data)
 
+  -- TODO should this subtract the color offset?
+
   return data.paintCanvas:GetPixels()
 
 end

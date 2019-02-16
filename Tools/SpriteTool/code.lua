@@ -234,17 +234,17 @@ function Init()
     paletteColorPickerData.onColorPress = function(value)
 
       -- if we are in palette mode, just get the currents selection. If we are in direct color mode calculate the real color index
-      -- value = usePalettes and paletteColorPickerData.picker.selected or pixelVisionOS:CalculateRealColorIndex(paletteColorPickerData, value)
-      --
-      -- -- Make sure if we select the last color, we mark it as the mask color
-      -- if(value == paletteColorPickerData.total - 1) then
-      --   value = -1
-      -- end
-      --
-      -- lastColorID = value
-      --
-      -- -- Set the canvas brush color
-      -- editorUI:CanvasBrushColor(canvasData, value)
+      value = usePalettes and paletteColorPickerData.picker.selected or pixelVisionOS:CalculateRealColorIndex(paletteColorPickerData, value)
+
+      -- Make sure if we select the last color, we mark it as the mask color
+      if(value == paletteColorPickerData.total - 1) then
+        value = -1
+      end
+
+      lastColorID = value
+
+      -- Set the canvas brush color
+      editorUI:CanvasBrushColor(canvasData, value)
 
     end
 
@@ -260,17 +260,17 @@ function Init()
         -- Update the sprite picker color offset
         spritePickerData.colorOffset = newColorOffset
 
-
         -- Update the canvas color offset
         canvasData.colorOffset = newColorOffset
 
         pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
 
-        -- pixelVisionOS:OnSpritePageClick(spritePickerData, spritePickerData.pages.currentSelection)
-
         UpdateCanvas(lastSelection)
 
-        -- editorUI:SelectPicker(paletteColorPickerData.picker, lastColorID)
+        -- Need to reselect the current color in the new palette if we are in draw mode
+        if(canvasData.tool ~= "eraser" or canvasData.tool ~= "eyedropper") then
+          editorUI:SelectPicker(paletteColorPickerData.picker, lastColorID)
+        end
 
       end
 
@@ -624,22 +624,33 @@ end
 
 function OnSaveCanvasChanges()
 
-
-
   local pixelData = editorUI:GetCanvasPixelData(canvasData)
   local canvasSize = editorUI:GetCanvasSize(canvasData)
 
   local tmpX = spritePickerData.picker.selectedDrawArgs[2] + spritePickerData.picker.borderOffset
   local tmpY = spritePickerData.picker.selectedDrawArgs[3] + spritePickerData.picker.borderOffset
 
-  if(spritePickerData.picker.selected > - 1)then
-    DrawPixels(pixelData, tmpX, tmpY, canvasSize.width, canvasSize.height, false, false, DrawMode.TilemapCache)
-  end
-
   local total = #pixelData
 
+  -- Clean up the raw pixel data so we can save it
   for i = 1, total do
-    pixelData[i] = pixelData[i] - colorOffset
+    pixelData[i] = pixelData[i] - canvasData.colorOffset
+
+    -- Clean up transparent colors
+    if(pixelData[i] < 0) then
+      pixelData[i] = -1
+    end
+
+  end
+
+  -- Redraw the sprite pixel data to the sprite picker
+  if(spritePickerData.picker.selected > - 1) then
+
+    -- TODO clear pixel data below the sprite to account for changes in transparency
+
+    DrawRect(tmpX, tmpY, canvasSize.width, canvasSize.height, pixelVisionOS.emptyColorID, DrawMode.TilemapCache)
+
+    DrawPixels(pixelData, tmpX, tmpY, canvasSize.width, canvasSize.height, false, false, DrawMode.TilemapCache, spritePickerData.colorOffset)
   end
 
   local realIndex = pixelVisionOS:CalculateRealSpriteIndex(spritePickerData)
@@ -659,6 +670,11 @@ function OnSaveCanvasChanges()
   -- Make sure the clear button is enabled since a change has happened to the canvas
   pixelVisionOS:EnableMenuItem(ClearShortcut, true)
   pixelVisionOS:EnableMenuItem(RevertShortcut, true)
+
+  -- TODO this is expensive since it's redrawing the entire page on ever update. We should only redraw the actual sprite we are on taking into account the color offset
+
+  -- Redraw the sprite picker
+  -- pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
 
 end
 
@@ -696,8 +712,8 @@ function OnSelectTool(value)
     -- Need to find the right color if we are in palette mode
     if(usePalettes == true) then
 
-      -- TODO this is not working
-      -- lastColorID = last
+      -- Need to offset the last color id by the current palette page
+      lastColorID = lastColorID + ((paletteColorPickerData.pages.currentSelection - 1) * 16)
 
     end
 
@@ -869,12 +885,15 @@ function Update(timeDelta)
 
       editorUI:UpdateCanvas(canvasData)
 
-      if(canvasData.tool == "eyedropper") then
+      if(canvasData.tool == "eyedropper" and canvasData.inFocus and MouseButton(0)) then
+
+        --  print("canvasData", canvasData.inFocus)
 
         local colorID = canvasData.overColor
 
         --
 
+        -- print("Color ID", colorID)
 
         -- TODO need to account for direct color mode or palette mode
         -- TODO in palette mode, use % to find the correct color on any page since you only paint with 0 - 16
@@ -882,23 +901,27 @@ function Update(timeDelta)
         -- Only update the color selection when it's new
         if(colorID ~= lastColorID) then
 
-          if(usePalettes == true) then
-            -- print("colorID", colorID)
-          end
-
           lastColorID = colorID
 
-          if(colorID == -1) then
+          if(colorID < 0) then
 
-            local lastColor = usePalettes and gameEditor:ColorsPerSprite() or paletteColorPickerData.total - 1
+            lastColorID = (usePalettes and paletteColorPickerData.visiblePerPage or paletteColorPickerData.total) - 1 + ((paletteColorPickerData.pages.currentSelection - 1) * 16)
 
-            pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColor)
+            -- print("Color ID Empty", lastColor)
 
-          else
+            --
+            -- pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColor)
+            --
+            -- else
 
-            pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColorID)
+          elseif(usePalettes == true) then
+            lastColorID = lastColorID + ((paletteColorPickerData.pages.currentSelection - 1) * 16)
 
           end
+
+
+
+          pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColorID)
 
         end
 
