@@ -137,22 +137,27 @@ function CollisionManager:EndDrag(source)
 
   -- print(source.name, "End Drag", #self.dragTargets)
 
-  self.currentDragSource.dragging = false
+  if(source.dragging == true) then
+    -- Look for drop targets
+    for i = 1, #self.dragTargets do
 
-  -- Look for drop targets
-  for i = 1, #self.dragTargets do
+      local dest = self.dragTargets[i]
+      if(self:MouseInRect(dest.rect)) then
 
-    local dest = self.dragTargets[i]
-    if(self:MouseInRect(dest.rect)) then
+        if(dest.onDropTarget ~= nil) then
+          -- print(source.name, "Drop On", dest.name)
+          dest.onDropTarget(source, dest)
+        end
 
-      if(dest.onDropTarget ~= nil) then
-        -- print(source.name, "Drop On", dest.name)
-        dest.onDropTarget(source, dest)
       end
 
     end
 
+    source.dragging = false
+
   end
+
+
 
   -- Clear drag state
   self.currentDragSource = nil

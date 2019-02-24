@@ -139,12 +139,18 @@ function Init()
 
     _G["spritepickerselectedup"] = {spriteIDs = spritepicker.spriteIDs, width = spritepicker.width, colorOffset = (_G["spritepickerover"].colorOffset + 4)}
 
-    spriteIDInputData = editorUI:CreateInputField({x = 176, y = 208, w = 32}, "0", "The ID of the currently selected color.", "number")
+    spriteIDInputData = editorUI:CreateInputField({x = 156, y = 208, w = 32}, "0", "The ID of the currently selected color.", "number")
     spriteIDInputData.min = 0
     spriteIDInputData.max = gameEditor:TotalSprites() - 1
     spriteIDInputData.onAction = ChangeSpriteID
 
-    sizeBtnData = editorUI:CreateButton({x = 224, y = 200}, "sprite1x", "Pick the sprite size.")
+    colorOffsetInputData = editorUI:CreateInputField({x = 200, y = 208, w = 24}, "0", "Change the color offset of the sprite preview.", "number")
+    colorOffsetInputData.min = 0
+    colorOffsetInputData.max = 256 - gameEditor:ColorsPerSprite() -- TODO need to figure out how we want to limit this
+    colorOffsetInputData.onAction = ChangeColorOffset
+
+
+    sizeBtnData = editorUI:CreateButton({x = 232, y = 200}, "sprite1x", "Pick the sprite size.")
     sizeBtnData.onAction = OnNextSpriteSize
 
     editorUI:Enable(sizeBtnData, false)
@@ -162,7 +168,7 @@ function Init()
     -- TODO if using palettes, need to replace this with palette color value
     local totalColors = pixelVisionOS.totalSystemColors
     local totalPerPage = 16--pixelVisionOS.systemColorsPerPage
-    local maxPages = 8
+    local maxPages = 16
     colorOffset = pixelVisionOS.colorOffset
 
     -- Check the game editor if palettes are being used
@@ -175,6 +181,7 @@ function Init()
       -- Change color label to palette
       DrawSprites(gamepalettetext.spriteIDs, 24 / 8, 168 / 8, gamepalettetext.width, false, false, DrawMode.Tile)
 
+      editorUI:Enable(colorOffsetInputData, false)
     end
 
     canvasData = editorUI:CreateCanvas(
@@ -262,6 +269,8 @@ function Init()
 
         -- Update the canvas color offset
         canvasData.colorOffset = newColorOffset
+
+        editorUI:ChangeInputField(colorOffsetInputData, newColorOffset - pixelVisionOS.colorOffset, false)
 
         pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
 
@@ -879,6 +888,7 @@ function Update(timeDelta)
       pixelVisionOS:UpdateSpritePicker(spritePickerData)
 
       editorUI:UpdateInputField(spriteIDInputData)
+      editorUI:UpdateInputField(colorOffsetInputData)
       -- editorUI:UpdateInputField(colorHexInputData)
 
       editorUI:UpdateButton(sizeBtnData)
@@ -976,5 +986,15 @@ function OnSpriteBuilder()
   else
     pixelVisionOS:DisplayMessage("No sprites were found in the 'SpriteBuilder' folder.")
   end
+
+end
+
+function ChangeColorOffset(value)
+
+  -- Change the sprite picker color offset
+  spritePickerData.colorOffset = value + pixelVisionOS.colorOffset
+
+  -- Redraw the page
+  pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
 
 end

@@ -39,6 +39,7 @@ function PixelVisionOS:CreateColorPicker(rect, tileSize, total, totalPerPage, ma
   data.pageOverTime = 0
   data.pageOverDelay = .5
   data.pageOverLast = -1
+  data.toolTip = toolTip
 
   -- Total items in the picker
   data.total = total
@@ -239,6 +240,8 @@ function PixelVisionOS:UpdateColorPicker(data)
 
     local colorID = pixelVisionOS:CalculateRealColorIndex(data, data.picker.selected) + data.colorOffset
 
+
+
     -- TODO these ids need to be part of the component's data, not hard coded
     if(Color(colorID) ~= self.maskColor) then
       ReplaceColor(50, colorID)
@@ -254,6 +257,8 @@ function PixelVisionOS:UpdateColorPicker(data)
 
     local colorID = pixelVisionOS:CalculateRealColorIndex(data, data.picker.overIndex) + data.colorOffset
 
+    data.picker.toolTip = data.toolTip .. string.lpad(tostring((colorID - 256)), 3, "0")
+
     -- TODO these ids need to be part of the component's data, not hard coded
     if(Color(colorID) ~= self.maskColor) then
       ReplaceColor(46, colorID)
@@ -267,6 +272,8 @@ function PixelVisionOS:UpdateColorPicker(data)
   end
 
   if(data.dragging == true and self.editorUI.collisionManager.dragTime > data.dragDelay) then
+
+    -- print(data.name, data.dragging)
     data.picker.overDrawArgs[2] = self.editorUI.collisionManager.mousePos.x - 10
     data.picker.overDrawArgs[3] = self.editorUI.collisionManager.mousePos.y - 10
     self.editorUI:NewDraw("DrawSprites", data.picker.overDrawArgs)
@@ -422,6 +429,7 @@ function PixelVisionOS:ClearColorPickerSelection(data)
 
   self.editorUI:ClearPickerSelection(data.picker)
 
+  data.currentSelection = -1
   -- Select the right page
   -- self:SelectColorPage(data, 1)
 

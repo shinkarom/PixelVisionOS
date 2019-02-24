@@ -118,4 +118,5 @@ function ExplodeSettings(str)
   table.insert(arr, tonumber(string.sub(str, pos)))
   return arr
 end
+
 -- Editor Helpers

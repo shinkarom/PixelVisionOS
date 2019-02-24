@@ -39,7 +39,7 @@ local refreshDelay = 5
 local fileCount = 0
 
 
-local fileTypeMap =
+local fileTypeMap = 
 {
   folder = "filefolder",
   updirectory = "fileparentfolder",
@@ -63,7 +63,7 @@ local fileTypeMap =
   new = "filenewfile"
 }
 
-local extToTypeMap =
+local extToTypeMap = 
 {
   colors = "png",
   system = "json",
@@ -160,7 +160,7 @@ function Init()
   -- TODO need to see if the log file actually exists
   local logExits = true
 
-  local menuOptions =
+  local menuOptions = 
   {
     -- About ID 1
     {name = "About", action = function() pixelVisionOS:ShowAboutModal(toolName, aboutText) end, toolTip = "Learn about PV8."},
@@ -728,21 +728,21 @@ function OnEjectDisk(diskName)
   diskPath = "/" .. diskName .. "/"
 
   pixelVisionOS:ShowMessageModal("Eject Disk", "Do you want to eject the '".. diskName.."'disk?", 160, true,
-  function()
+    function()
 
-    -- Only perform the copy if the user selects OK from the modal
-    if(pixelVisionOS.messageModal.selectionValue) then
+      -- Only perform the copy if the user selects OK from the modal
+      if(pixelVisionOS.messageModal.selectionValue) then
 
-      if(currentDirectory ~= "none") then
-        CloseWindow()
+        if(currentDirectory ~= "none") then
+          CloseWindow()
+        end
+
+        EjectDisk(diskPath)
+
+        RebuildDesktopIcons()
       end
 
-      EjectDisk(diskPath)
-
-      RebuildDesktopIcons()
     end
-
-  end
   )
 
 end
@@ -1143,7 +1143,7 @@ function OpenWindow(path, scrollTo, selection)
   if(runnerName ~= DrawVersion and runnerName ~= TuneVersion) then
 
     -- Check to see if this is a game directory
-    if(pixelVisionOS:ValidateGameInDir(path) and TrashOpen() == false) then
+    if(pixelVisionOS:ValidateGameInDir(path, {"code.lua"}) and TrashOpen() == false) then
 
       table.insert(
         files,
@@ -1622,17 +1622,17 @@ function OnWindowIconClick(id)
     -- TODO need to know if this disk is being mounted as read only
     -- TODO don't run
     pixelVisionOS:ShowMessageModal("Run Disk", "Do you want to run this disk?", 160, true,
-    function()
+      function()
 
-      -- Only perform the copy if the user selects OK from the modal
-      if(pixelVisionOS.messageModal.selectionValue) then
+        -- Only perform the copy if the user selects OK from the modal
+        if(pixelVisionOS.messageModal.selectionValue) then
 
-        -- TODO need to load the game in read only mode
-        LoadGame(path)
+          -- TODO need to load the game in read only mode
+          LoadGame(path)
+
+        end
 
       end
-
-    end
     )
 
     -- Check to see if there is an editor for the type or if the type is unknown
@@ -1993,11 +1993,11 @@ function OnExportGame()
 
   pixelVisionOS:ShowMessageModal("Build " .. (response.success == true and "Complete" or "Failed"), response.message, 160, false, function()
     if(response.success == true) then
-        OpenWindow(response.path)
-    end
+    OpenWindow(response.path)
+  end
 
-  end)
+end)
 
-  -- TODO this will return a path, do we want to go to the path after a build?
+-- TODO this will return a path, do we want to go to the path after a build?
 
 end

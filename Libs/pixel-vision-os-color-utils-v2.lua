@@ -70,15 +70,23 @@ function PixelVisionOS:ImportColorsFromGame()
     local index = i - 1
 
     -- Get the color from the game
-    local tmpColor = gameEditor:Color(index)
+    -- local tmpColor = gameEditor:Color(index)
 
     -- get the game color at the current index
     local color = gameColors[i]
 
-    local ignoreColor = self.paletteMode == true and table.indexOf(self.systemColors, color) ~= -1 or false
+    local ignoreColor = false
+
+    if(self.paletteMode == true) then
+      if(color == self.maskColor or table.indexOf(self.systemColors, color) ~= -1) then
+        ignoreColor = true
+      end
+    end
+
+    -- self.paletteMode == true and table.indexOf(self.systemColors, color) ~= -1 or false
 
     -- Look to see if we have the system color or if its not the mask color
-    if(ignoreColor == false and color ~= self.maskColor) then
+    if(ignoreColor == false) then
 
       -- Reset the index to the last ID of the system color's array
       index = #self.systemColors
@@ -87,13 +95,21 @@ function PixelVisionOS:ImportColorsFromGame()
       table.insert(self.systemColors, color)
 
       -- Save the game's color to the tool's memory
-      Color(index + self.colorOffset, tmpColor)
+      Color(index + self.colorOffset, color)
 
     end
+
+
 
     -- print("Import Color From", index)
 
   end
+
+  -- -- Add the system color to the table
+  -- table.insert(self.systemColors, self.maskColor)
+  --
+  -- -- Force the last color to be transparent
+  -- Color(#self.systemColors + 1 + self.colorOffset, self.maskColor)
 
   self.paletteColors = {}
 
@@ -110,26 +126,13 @@ function PixelVisionOS:ImportColorsFromGame()
 
       local colorID = color == self.maskColor and - 1 or table.indexOf(self.systemColors, color)
 
+
       -- print("Import Palette Color From", index, color, colorID)
-
-      Color(index + self.colorOffset, color)
-
+      if(colorID > - 1 and color ) then
+        Color(index + self.colorOffset, color)
+      end
       -- Add the system color to the table
       table.insert(self.paletteColors, colorID)
-
-      -- if(color ~= self.maskColor) then
-      --   paletteCounter = paletteCounter + 1
-      -- end
-
-      -- if(i%16 == 0) then
-      --
-      --   if(paletteCounter > self.paletteColorsPerPage) then
-      --     self.paletteColorsPerPage = paletteCounter + 1
-      --   end
-      --
-      --   paletteCounter = 0
-      --
-      -- end
 
     end
 
@@ -143,148 +146,10 @@ function PixelVisionOS:ImportColorsFromGame()
   -- Add up the palette colors
   self.totalPaletteColors = #self.paletteColors
 
-  -- Need to import palettes
-
-
-
-  --
-  -- -- Set the color mode
-  -- self.paletteMode = gameEditor:PaletteMode()
-  --
-  -- -- Create two tables to store system and palette colors
-  -- self.systemColors = {}
-  -- self.paletteColors = {}
-  --
-  -- -- If we are in palette mode, we need to split the total colors in half
-  -- local startTotal = self.paletteMode == true and (self.totalColors / 2) or self.totalColors
-  --
-  -- self.systemColorsPerPage = 64
-  --
-  -- -- Save the start position of the system colors
-  -- self.systemColorOffset = self.colorOffset
-  -- self.totalSystemColors = 0
-  -- self.totalPaletteColors = 0
-  -- -- Loop through all the system colors and make sure they are unique
-  -- -- for i = 1, startTotal do
-  -- --
-  -- --   local color = gameColors[i]
-  -- --   if(table.indexOf(self.systemColors, color) == -1 and color ~= self.maskColor) then
-  -- --     table.insert(self.systemColors, color)
-  -- --   end
-  -- --
-  -- -- end
-  -- self.paletteColorsPerPage = 16
-  --
-  -- local colorCount = 0
-  --
-  -- for i = 1, 256 do
-  --
-  --   local index = i - 1
-  --
-  --   local tmpColor = gameEditor:Color(index)
-  --
-  --   -- Add colors to the palette list
-  --   if(self.paletteMode == true and i > 127) then
-  --
-  --     -- Add colors to the system color list
-  --     if(tmpColor ~= self.maskColor) then
-  --       colorCount = colorCount + 1
-  --     end
-  --
-  --     -- There are 16 colors total in a palette
-  --     if(i % self.paletteColorsPerPage == (self.paletteColorsPerPage - 1)) then
-  --
-  --       if(colorCount > 0) then
-  --         self.totalPaletteColors = self.totalPaletteColors + self.paletteColorsPerPage
-  --       end
-  --
-  --       colorCount = 0
-  --     end
-  --
-  --     -- Add the color to the palette color table
-  --     table.insert(self.paletteColors, tmpColor)
-  --
-  --   else
-  --
-  --     if(table.indexOf(self.systemColors, tmpColor) == -1 and tmpColor ~= self.maskColor) then
-  --       -- print("Add System Color", i, "at", #self.systemColors)
-  --       table.insert(self.systemColors, tmpColor)
-  --     end
-  --
-  --   end
-  --
-  -- end
-  --
-  -- -- Save the unique system colors
-  -- self.totalSystemColors = #self.systemColors
-  -- -- self.totalPaletteColors = #self.paletteColors
-  --
-  --
-  --
-  -- -- self.totalGameColors = 0--#gameColors
-  --
-  -- -- TODO this is  duplicated, and should be a single value
-  -- self.gameColorOffset = self.colorOffset
-  --
-  -- self:CopyColorsToMemory()
-  --
-  -- -- Only create palettes if we load up in palette mode
-  -- if(self.paletteMode) then
-  --
-  --   self:CopyPaletteColorsToMemory()
-  --
-  -- end
-
 end
 
 
 
-function PixelVisionOS:CopyPaletteColorsToMemory()
-
-  -- -- Find the game color start index
-  -- local startIndex = self.colorOffset - 1 + 127
-  --
-  -- -- Clear all the previous colors
-  -- for i = 1, 256 do
-  --   local index = i - 1
-  --   Color(startIndex + index, self.maskColor)
-  -- end
-  --
-  -- -- get the palette data
-  -- local data = paletteColorPickerData
-  --
-  -- -- Figure out the total colors
-  -- -- local total =
-  --
-  -- -- Set the page counter
-  -- local page = 1
-  --
-  -- -- Start the ID at 0
-  -- local id = 0
-  --
-  -- -- Loop through the total palette colors
-  -- for i = 1, self.totalPaletteColors do
-  --
-  --   -- Increate the ID by 1 on each loop
-  --   id = id + 1
-  --
-  --   -- Set the color based on the current position and find the right palette color
-  --   Color(startIndex + i, self.paletteColors[id])
-  --
-  --   -- Check if we are on a new page to skip the empty colors
-  --   if(i % self.paletteColorsPerPage == 0) then
-  --
-  --     -- Increase the current palette page
-  --     page = page + 1
-  --
-  --     -- Shift the ID over to the next page of palette colors
-  --     id = (page - 1) * 16
-  --
-  --   end
-  --
-  -- end
-
-end
 
 function PixelVisionOS:CopyGameColorsToGameMemory()
 
@@ -307,30 +172,5 @@ function PixelVisionOS:CopyGameColorsToGameMemory()
     gameEditor:Color(index, newColor)
 
   end
-
-end
-
-function PixelVisionOS:CopyColorsToMemory()
-
-  -- -- if(self.paletteMode)
-  --
-  -- for i = 1, 256 do
-  --
-  --   local index = i - 1
-  --
-  --   local color = self.maskColor
-  --
-  --   if(self.paletteMode and i > 128) then
-  --     color = self.paletteColors[i]
-  --   else
-  --
-  --     if(i <= self.totalSystemColors) then
-  --       color = self.systemColors[i]
-  --     end
-  --   end
-  --
-  --   Color(self.systemColorOffset + index, color)
-  --
-  -- end
 
 end

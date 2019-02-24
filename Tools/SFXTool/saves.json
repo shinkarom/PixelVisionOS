@@ -1,11 +1,11 @@
 {
-
-"GameChip":
-{
-    "savedData":{
-        "sessionID": "201902161407081668",
-        "currentID": "31",
-        "rootDirectory": "/Disks/EmptyDisk/PaletteTest/"
+    
+    "GameChip":
+    {
+        "savedData":{
+            "rootDirectory": "/Disks/EmptyDisk/PaletteTest/",
+            "currentID": "0",
+            "sessionID": "201902201946082464"
+        }
     }
-}
 }
