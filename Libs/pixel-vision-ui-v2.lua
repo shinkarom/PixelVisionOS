@@ -268,7 +268,10 @@ function EditorUI:ClearFocus(data)
   -- Clear all focus if no data is provided
   if(data == nil) then
     self.cursorID = 1
-    self.inFocusUI = nil
+    if(self.inFocusUI ~= nil) then
+      self.inFocusUI.inFocus = false
+      self.inFocusUI = nil
+    end
     return
   end
 

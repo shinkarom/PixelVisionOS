@@ -37,11 +37,11 @@ fillselectedup={width=2,spriteIDs={344,345,366,367}}
 fillup={width=2,spriteIDs={270,271,285,286}}
 gamecolortext={width=4,spriteIDs={381,382,383,15}}
 gamepalettetext={width=5,spriteIDs={450,451,432,14,15}}
-hflipdisabled={width=2,spriteIDs={484,485,512,513}}
-hflipover={width=2,spriteIDs={488,489,516,517}}
-hflipselectedover={width=2,spriteIDs={444,445,454,455}}
-hflipselectedup={width=2,spriteIDs={490,491,518,519}}
-hflipup={width=2,spriteIDs={486,487,514,515}}
+hflipdisabled={width=2,spriteIDs={492,493,520,521}}
+hflipover={width=2,spriteIDs={548,549,560,561}}
+hflipselectedover={width=2,spriteIDs={460,461,463,464}}
+hflipselectedup={width=2,spriteIDs={550,551,562,563}}
+hflipup={width=2,spriteIDs={494,495,522,523}}
 hsliderhandle={width=3,spriteIDs={408,409,410,427,428,429}}
 linedisabled={width=2,spriteIDs={10,11,20,21}}
 linedisabled_141={width=3,spriteIDs={408,409,410,427,428,429}}
@@ -173,9 +173,9 @@ titlebarvolumeoff={width=1,spriteIDs={39}}
 titlebarvolumeon={width=1,spriteIDs={40}}
 toolbariconfile={width=1,spriteIDs={62}}
 toolbaricontool={width=1,spriteIDs={63}}
-vflipdisabled={width=2,spriteIDs={492,493,520,521}}
-vflipover={width=2,spriteIDs={548,549,560,561}}
-vflipselectedover={width=2,spriteIDs={460,461,463,464}}
-vflipselectedup={width=2,spriteIDs={550,551,562,563}}
-vflipup={width=2,spriteIDs={494,495,522,523}}
+vflipdisabled={width=2,spriteIDs={484,485,512,513}}
+vflipover={width=2,spriteIDs={488,489,516,517}}
+vflipselectedover={width=2,spriteIDs={444,445,454,455}}
+vflipselectedup={width=2,spriteIDs={490,491,518,519}}
+vflipup={width=2,spriteIDs={486,487,514,515}}
 -- spritelib-end

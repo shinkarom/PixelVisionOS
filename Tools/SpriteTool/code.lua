@@ -25,8 +25,11 @@ local originalPixelData = nil
 local lastSelection = -1
 local lastColorID = 0
 local colorEditorPath = "/"
+local colorCountInvalid = false
+local flipH = false
+local flipV = false
 
-local tools = {"pen", "eraser", "line", "box", "circle", "eyedropper", "fill"}--, "select"}
+local tools = {"pen", "line", "box", "circle", "eyedropper", "fill"}--, "select"}
 
 ClearShortcut, SaveShortcut, RevertShortcut, CopyShortcut, PasteShortcut, SpriteBuilderShortcut = 4, 5, 6, 8, 9, 11, 12
 
@@ -57,6 +60,18 @@ function ResetDataValidation()
   invalid = false
 
   pixelVisionOS:EnableMenuItem(SaveShortcut, false)
+
+end
+
+function InvalidateColorCount()
+
+  colorCountInvalid = true
+
+end
+
+function ResetColorInvalidation()
+
+  colorCountInvalid = false
 
 end
 
@@ -159,11 +174,7 @@ function Init()
     toolBtnData.onAction = OnSelectTool
 
 
-    for i = 1, #tools do
-      local offsetY = ((i - 1) * 16) + 32
-      local rect = {x = 144, y = offsetY, w = 16, h = 16}
-      editorUI:ToggleGroupButton(toolBtnData, rect, tools[i], "This is tool button " .. tostring(i))
-    end
+
 
     -- TODO if using palettes, need to replace this with palette color value
     local totalColors = pixelVisionOS.totalSystemColors
@@ -174,7 +185,15 @@ function Init()
     -- Check the game editor if palettes are being used
     usePalettes = pixelVisionOS.paletteMode
 
-    if(usePalettes == true) then
+    -- Configure tool for palette mode
+    if(usePalettes == false) then
+
+      -- Add the eraser if we are in direct color mode
+      table.insert(tools, 2, "eraser")
+
+    else
+
+      -- Change the total colors when in palette mode
       totalColors = 128
       colorOffset = colorOffset + 128
 
@@ -182,6 +201,37 @@ function Init()
       DrawSprites(gamepalettetext.spriteIDs, 24 / 8, 168 / 8, gamepalettetext.width, false, false, DrawMode.Tile)
 
       editorUI:Enable(colorOffsetInputData, false)
+    end
+
+    local offsetY = 0
+    -- Build tools
+    for i = 1, #tools do
+      offsetY = ((i - 1) * 16) + 32
+      local rect = {x = 144, y = offsetY, w = 16, h = 16}
+      editorUI:ToggleGroupButton(toolBtnData, rect, tools[i], "Select the '" .. tools[i] .. "' tool.")
+    end
+
+
+    -- TODO draw flip buttons
+    flipHButton = editorUI:CreateToggleButton({x = 144, y = offsetY + 16 + 8, w = 16, h = 16}, "hflip", "Preview the sprite flipped horizontally.")
+
+    flipHButton.onAction = function(value)
+
+      flipH = value
+
+      ChangeSpriteID(tonumber(spriteIDInputData.text))
+
+
+    end
+
+    flipVButton = editorUI:CreateToggleButton({x = 144, y = offsetY + 32 + 8, w = 16, h = 16}, "vflip", "Preview the sprite flipped horizontally.")
+
+    flipVButton.onAction = function(value)
+
+      flipV = value
+
+      ChangeSpriteID(tonumber(spriteIDInputData.text))
+
     end
 
     canvasData = editorUI:CreateCanvas(
@@ -230,7 +280,7 @@ function Init()
       maxPages,
       colorOffset,
       "itempicker",
-      "Select a color."
+      usePalettes == true and "Select palette color " or "Select system color "
     )
 
     if(usePalettes == true) then
@@ -249,6 +299,39 @@ function Init()
       end
 
       lastColorID = value
+
+      local enableCanvas = true
+
+      -- Only count colors when we are not suing the eraser or the eye dropper
+      if(canvasData.tool ~= "eraser" and canvasData.tool ~= "eyedropper") then
+
+        local pixelData = editorUI:GetCanvasPixelData(canvasData)
+        local uniqueColors = {}
+        for i = 1, #pixelData do
+          local pixel = pixelData[i] - canvasData.colorOffset
+          if(table.indexOf(uniqueColors, pixel) == -1) then
+            table.insert(uniqueColors, pixel)
+          end
+        end
+
+        if(table.indexOf(uniqueColors, value) == - 1) then
+
+          enableCanvas = #uniqueColors < gameEditor:ColorsPerSprite()
+
+        end
+
+        if(enableCanvas == false and colorCountInvalid == false) then
+          pixelVisionOS:DisplayMessage("Sprite contains the maximum number of colors it can display.")
+
+          -- pixelVisionOS:ShowMessageModal(toolName .. "Error", "You have reached the maximum number of colors this sprite can have. Please delete a color from the canvas or increase the total colors per sprite value.", 160, false)
+
+          InvalidateColorCount()
+
+        end
+
+      end
+
+      editorUI:Enable(canvasData, enableCanvas)
 
       -- Set the canvas brush color
       editorUI:CanvasBrushColor(canvasData, value)
@@ -633,7 +716,8 @@ end
 
 function OnSaveCanvasChanges()
 
-  local pixelData = editorUI:GetCanvasPixelData(canvasData)
+  local pixelData = gameEditor:FlipPixelData(editorUI:GetCanvasPixelData(canvasData), flipH, flipV)
+
   local canvasSize = editorUI:GetCanvasSize(canvasData)
 
   local tmpX = spritePickerData.picker.selectedDrawArgs[2] + spritePickerData.picker.borderOffset
@@ -663,6 +747,8 @@ function OnSaveCanvasChanges()
   end
 
   local realIndex = pixelVisionOS:CalculateRealSpriteIndex(spritePickerData)
+
+
 
   -- Update the current sprite in the picker
   gameEditor:Sprite(realIndex, pixelData)
@@ -702,6 +788,11 @@ function OnSelectTool(value)
 
     -- Disable the color picker
     pixelVisionOS:EnableColorPicker(paletteColorPickerData, false)
+
+    -- Make sure the canvas is enabled
+    editorUI:Enable(canvasData, true)
+
+    ResetColorInvalidation()
 
   else
 
@@ -792,6 +883,7 @@ function OnSave()
 
 end
 
+
 function OnSelectSprite(value)
 
   -- TODO need to convert the value to the Real ID
@@ -804,11 +896,19 @@ function OnSelectSprite(value)
 
   UpdateCanvas(value)
 
+  ResetColorInvalidation()
+
+  pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColorID)
+
 end
 
 function UpdateCanvas(value)
+
+
+
   -- Save the original pixel data from the selection
-  local tmpPixelData = gameEditor:Sprite(value)
+  local tmpPixelData = gameEditor:FlipPixelData(gameEditor:Sprite(value), flipH, flipV)
+
 
   local scale = 16 -- TODO need to get the real scale
   local size = NewVector(8, 8)
@@ -892,6 +992,8 @@ function Update(timeDelta)
       -- editorUI:UpdateInputField(colorHexInputData)
 
       editorUI:UpdateButton(sizeBtnData)
+      editorUI:UpdateButton(flipHButton)
+      editorUI:UpdateButton(flipVButton)
 
       editorUI:UpdateCanvas(canvasData)
 
@@ -915,23 +1017,16 @@ function Update(timeDelta)
 
           if(colorID < 0) then
 
-            lastColorID = (usePalettes and paletteColorPickerData.visiblePerPage or paletteColorPickerData.total) - 1 + ((paletteColorPickerData.pages.currentSelection - 1) * 16)
+            pixelVisionOS:ClearColorPickerSelection(paletteColorPickerData)
 
-            -- print("Color ID Empty", lastColor)
+            -- Force the lastColorID to be back in range so there is a color to draw with
+            lastColorID = 0
 
-            --
-            -- pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColor)
-            --
-            -- else
+          else
 
-          elseif(usePalettes == true) then
-            lastColorID = lastColorID + ((paletteColorPickerData.pages.currentSelection - 1) * 16)
-
+            -- Seelect the
+            pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColorID)
           end
-
-
-
-          pixelVisionOS:SelectColorPickerColor(paletteColorPickerData, lastColorID)
 
         end
 

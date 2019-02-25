@@ -229,7 +229,7 @@ function Init()
 
 
     -- Calculate the total system color pages, there are 4 in direct color mode (64 per page for 256 total) or 2 in palette mode (64 per page for 128 total)
-    local maxSystemPages = gameEditor:ColorPages()
+    -- local maxSystemPages = 4--gameEditor:ColorPages()
 
     -- math.ceil(pixelVisionOS.totalSystemColors / pixelVisionOS.systemColorsPerPage)
 
@@ -239,7 +239,7 @@ function Init()
       {x = 16, y = 16}, -- Tile size
       pixelVisionOS.totalSystemColors, -- Total colors, plus 1 for empty transparancy color
       pixelVisionOS.systemColorsPerPage, -- total per page
-      maxSystemPages, -- max pages
+      4, -- max pages
       pixelVisionOS.colorOffset, -- Color offset to start reading from
       "itempicker", -- Selection sprite name
       "Select system color ", -- Tool tip
@@ -710,6 +710,8 @@ function TogglePaletteMode(value, callback)
           -- Reindex the sprites so they will work in palette mode
           gameEditor:ReindexSprites()
 
+          spritesInvalid = true
+
           -- Redraw the sprite picker to they will display the correct colors
           pixelVisionOS:RedrawSpritePickerPage(spritePickerData)
 
@@ -730,7 +732,7 @@ function TogglePaletteMode(value, callback)
 
             local color = i < gameEditor:ColorsPerSprite() and Color(index + pixelVisionOS.colorOffset) or pixelVisionOS.maskColor
 
-            Color(index + pixelVisionOS.colorOffset + 128, color)
+            Color(index + pixelVisionOS.colorOffset + 129, color)
 
           end
 
@@ -876,7 +878,9 @@ function OnSave()
   pixelVisionOS:CopyGameColorsToGameMemory()
 
   -- These are the default flags we are going to save
-  local flags = {SaveFlags.System, SaveFlags.Meta, SaveFlags.Colors, SaveFlags.ColorMap, SaveFlags.System}
+  local flags = {SaveFlags.System, SaveFlags.Meta, SaveFlags.Colors, SaveFlags.ColorMap}
+
+  -- TODO need to tell if we are not in palette mode any more and recolor sprites and delete color-map.png file?
 
   gameEditor:WriteMetaData("paletteMode", usePalettes and "true" or "false")
 
@@ -896,8 +900,7 @@ function OnSave()
     -- Add the sprite flag
     table.insert(flags, SaveFlags.Sprites)
 
-    -- Clear the sprite invalidation
-    ResetSpriteInvalidation()
+    spritesInvalid = false
 
   end
 
@@ -948,6 +951,8 @@ function OnAdd()
       -- Disable add option
 
       UpdateAddDeleteShortcuts()
+
+      gameEditor:ColorsPerSprite(paletteColorPickerData.visiblePerPage)
 
 
     end
@@ -1277,6 +1282,7 @@ function OnDeletePaletteColor(value)
 
           UpdateAddDeleteShortcuts()
 
+          gameEditor:ColorsPerSprite(paletteColorPickerData.visiblePerPage)
 
         end
 

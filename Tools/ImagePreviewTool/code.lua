@@ -15,30 +15,17 @@ LoadScript("pixel-vision-os-color-picker-v2")
 
 local toolName = "Image Preview"
 local debugMode = false
-
 local pixelVisionOS = nil
 local editorUI = nil
-
--- local fileSize = "000k"
 local invalid = true
-
 local rootDirectory = nil
-local showLines = false
-local lineWidth = 0
-local totalLines = 0
 local viewport = {x = 8, y = 24, w = 224, h = 184}
-
 local mouseOrigin = {x = 0, y = 0}
 local boundary = {x = 0, y = 0, w = 0, h = 0}
 local scrollPos = {x = 0, y = 0}
 local isPanning = false
 local scrollDelay = .2
 local scrollTime = 0
-
-
--- local loadTime = 0
--- local loadDelay = 0
--- local firstRun = true
 local imageLoaded = false
 
 function Init()
@@ -104,14 +91,8 @@ end
 function SelectLayer(value)
 
   layerMode = value - 1
-  --
+
   gameEditor:RenderMapLayer(layerMode)
-  -- -- gameEditor:NextRenderStep()
-  --
-  -- InvalidateMap()
-  --
-  -- -- Clear background
-  -- DrawRect(viewport.x, viewport.y, viewport.w, viewport.h, pixelVisionOS.emptyColorID, DrawMode.TilemapCache)
 
 end
 
@@ -123,30 +104,6 @@ function ResetMapValidation()
   mapInvalid = false
 end
 
--- function OnQuit()
---
---   -- if(invalid == true) then
---   --
---   --   pixelVisionOS:ShowMessageModal("Unsaved Changes", "You have unsaved changes. Do you want to save your work before you quit?", 160, true,
---   --     function()
---   --       if(pixelVisionOS.messageModal.selectionValue == true) then
---   --         -- Save changes
---   --         OnSave()
---   --
---   --       end
---   --
---   --       -- Quit the tool
---   --       QuitCurrentTool()
---   --     end
---   --   )
---   --
---   -- else
---   -- Quit the tool
---   QuitCurrentTool()
---   -- end
---
--- end
-
 function InvalidateData()
 
   -- Only everything if it needs to be
@@ -155,8 +112,6 @@ function InvalidateData()
   end
 
   pixelVisionOS:ChangeTitle(toolTitle .."*", "toolbariconfile")
-
-  -- pixelVisionOS:EnableMenuItem(4, true)
 
   invalid = true
 
@@ -172,11 +127,6 @@ function ResetDataValidation()
   pixelVisionOS:ChangeTitle(toolTitle, "toolbariconfile")
   invalid = false
 
-  -- Reset the input field's text validation
-  -- editorUI:InputAreaResetTextValidation(inputAreaData)
-
-  -- pixelVisionOS:EnableMenuItem(4, false)
-
 end
 local scrollInvalid = true
 
@@ -184,37 +134,20 @@ function OnHorizontalScroll(value)
 
   -- TODO this is wrong but works when I use ABS... need to fix it
   scrollPos.x = math.abs(math.floor(((viewport.w - boundary.w) - viewport.w) * value))
-  --
-  -- print("scrollPos.x", scrollPos.x)
 
   InvalidateMap()
 end
 
 function OnVerticalScroll(value)
-  -- scrollPos.y = math.floor((viewport.h - boundary.h) * value)
-  -- print("scrollPos.y", scrollPos.y)
+
   scrollPos.y = math.abs(math.floor(((viewport.h - boundary.h) - viewport.h) * value))
 
   InvalidateMap()
 end
---
--- function LoadTool()
---
---   print("Ready to load tool")
---
---
---
--- end
 
 function OnImageLoaded()
 
-  -- if(success) then
-
   pixelVisionOS:ImportColorsFromGame()
-
-  -- DrawRect(viewport.x, viewport.y, viewport.w, viewport.h, pixelVisionOS.emptyColorID, DrawMode.TilemapCache)
-
-
 
   local menuOptions = 
   {
@@ -335,23 +268,22 @@ function Draw()
 
   RedrawDisplay()
 
-  if(mapInvalid == true and toolLoaded == true) then
+  if(mapInvalid == true and toolLoaded == true and pixelVisionOS:IsModalActive() == false) then
 
     -- update the scroll position
 
     -- print("Render", scrollPos.x, scrollPos.y)
     gameEditor:ScrollPosition(scrollPos.x, scrollPos.y)
 
-    local useBG = false--bgBtnData.selected
+    local useBG = false
     local bgColor = pixelVisionOS.emptyColorID
 
-    gameEditor:CopyRenderToDisplay(viewport.x, viewport.y, viewport.w, viewport.h, 255, bgColor)
+    gameEditor:CopyRenderToDisplay(viewport.x, viewport.y, viewport.w, viewport.h, 256, bgColor)
 
     if(debugMode) then
       colorMemoryCanvas:DrawPixels(8, 24, DrawMode.UI, 3)
     end
   end
-
 
   -- The ui should be the last thing to update after your own custom draw calls
   pixelVisionOS:Draw()
