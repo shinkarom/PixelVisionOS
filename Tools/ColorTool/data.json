@@ -1,7 +1,7 @@
 {
     "ColorChip":
     {
-        "pages":3,
+        "pages":4,
         "colorsPerPage":64,
         "maxColors":128,
         "backgroundColor":0,

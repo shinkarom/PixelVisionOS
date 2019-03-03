@@ -299,6 +299,8 @@ function Init()
     editorUI:CreateInputField({x = 224, y = 200, w = 8}, "", "Restart"),
   }
 
+  editorUI:Enable(shortcutFields[2], false)
+
   usedShortcutKeys = {}
 
   for i = 1, #shortcutFields do

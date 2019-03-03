@@ -3,12 +3,12 @@
     "GameChip":
     {
         "savedData":{
-            "selectedPalette": "-1",
+            "selectedSprite": "-1",
+            "selectedColor": "55",
+            "rootDirectory": "/Disks/EmptyDisk/NewProject/",
+            "sessionID": "201903021820056560",
             "editing": "undefined",
-            "sessionID": "201902260622551580",
-            "rootDirectory": "/Disks/EmptyDisk/DrawSpriteDemo/",
-            "selectedColor": "-1",
-            "selectedSprite": "-1"
+            "selectedPalette": "-1"
         }
     }
 }

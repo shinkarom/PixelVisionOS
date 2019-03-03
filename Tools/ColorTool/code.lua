@@ -1018,7 +1018,7 @@ end
 
 function UpdateHexColor(value)
 
-  print("Update Hex Color", value)
+  -- print("Update Hex Color", value)
 
   if(selectionMode == PaletteMode) then
     return
@@ -1385,7 +1385,7 @@ function OnSelectSystemColor(value)
   -- These are only available based on the palette mode
   pixelVisionOS:EnableMenuItem(AddShortcut, false)
   pixelVisionOS:EnableMenuItem(DeleteShortcut, usePalettes)
-  pixelVisionOS:EnableMenuItem(BGShortcut, true)
+  pixelVisionOS:EnableMenuItem(BGShortcut, ("#"..colorHex) ~= pixelVisionOS.maskColor)
 
   -- You can only copy a color when in direct color mode
   pixelVisionOS:EnableMenuItem(ClearShortcut, not usePalettes)

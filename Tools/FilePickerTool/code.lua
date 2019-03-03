@@ -152,9 +152,13 @@ function Init()
   -- Create modals
   -- messageModal = MessageModal:Init("Warning Modal", "This is a warning message which should show a lot of text in a small window on top of the main UI.", 100)
 
-  local workspacePath = "/Users/jessefreeman/PixelVision8/Workspace"
 
-  local aboutText = "The ".. toolName.. " offers you a file system. You can access your workspace path on your computer at \n\n" .. workspacePath
+
+  local aboutText = "The ".. toolName.. " offers you access to the underlying file system. \n\nTemporary files are stores on your computer at: \n\n" .. TmpPath()
+
+  if(runnerName == DrawVersion or runnerName == TuneVersion or runnerName == MakeVersion) then
+    aboutText = aboutText .. "\n\nYou can access the 'Workspace' drive on your computer at: \n\n" .. DocumentPath()
+  end
 
 
   -- TODO need to see if the log file actually exists

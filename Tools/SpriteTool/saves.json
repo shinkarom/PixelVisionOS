@@ -3,10 +3,10 @@
     "GameChip":
     {
         "savedData":{
-            "selectedSprite": "934",
-            "rootDirectory": "/Disks/EmptyDisk/SpaceRanger/",
-            "sessionID": "201902260622551580",
-            "editing": "undefined"
+            "editing": "undefined",
+            "sessionID": "201903021820056560",
+            "rootDirectory": "/Disks/PixelVisionOS/Tools/SettingsTool/",
+            "selectedSprite": "0"
         }
     }
 }

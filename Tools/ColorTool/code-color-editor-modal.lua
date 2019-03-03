@@ -19,6 +19,8 @@ end
 
 function EditColorModal:Configure()
 
+  self.colorCache = {}
+
   self.tmpColor = 255
 
   self.rgbMode = true
@@ -208,6 +210,8 @@ function EditColorModal:Configure()
 
     self:UpdateHexValue("#"..value)
 
+    self.showWarning = table.indexOf(self.colorCache, ("#"..value)) > - 1
+
     self:Invalidate()
 
   end
@@ -273,6 +277,20 @@ end
 
 function EditColorModal:Open()
 
+  -- Cache current colors
+
+  self.colorCache = {}
+
+  for i = 1, 128 do
+
+    table.insert(self.colorCache, Color(pixelVisionOS.colorOffset + (i - 1)))
+
+  end
+  --
+  -- for i = 1, #self.colorCache do
+  --   print(i, self.colorCache[i])
+  -- end
+
   self.canvas:DrawPixels(self.rect.x, self.rect.y, DrawMode.TilemapCache)
 
   DrawSprites(coloreditorpanel.spriteIDs, self.rect.x + 8, self.rect.y + 16, coloreditorpanel.width, false, false, DrawMode.TilemapCache)
@@ -308,7 +326,7 @@ end
 
 function EditColorModal:ChangeColorMode(value)
 
-  print("Toggle Color Mode", self.rgbMode, value)
+  --print("Toggle Color Mode", self.rgbMode, value)
 
   self.rgbMode = value == 1 and true or false
 
@@ -321,6 +339,7 @@ function EditColorModal:ChangeColorMode(value)
     DrawSprites(colorlabelgreen.spriteIDs, self.rect.x + 112, self.rect.y + 96, colorlabelgreen.width, false, false, DrawMode.TilemapCache)
     DrawSprites(colorlabelblue.spriteIDs, self.rect.x + 112, self.rect.y + 128, colorlabelblue.width, false, false, DrawMode.TilemapCache)
 
+    DrawSprites(rgbcolorspace.spriteIDs, self.rect.x + 16, self.rect.y + 32, hsvcolorspace.width, false, false, DrawMode.TilemapCache)
 
   else
     self.redInputData.max = 100
@@ -331,9 +350,11 @@ function EditColorModal:ChangeColorMode(value)
     DrawSprites(colorlabelsaturation.spriteIDs, self.rect.x + 112, self.rect.y + 96, colorlabelsaturation.width, false, false, DrawMode.TilemapCache)
     DrawSprites(colorlabelvalue.spriteIDs, self.rect.x + 112, self.rect.y + 128, colorlabelvalue.width, false, false, DrawMode.TilemapCache)
 
+    DrawSprites(hsvcolorspace.spriteIDs, self.rect.x + 16, self.rect.y + 32, hsvcolorspace.width, false, false, DrawMode.TilemapCache)
+
   end
 
-  print("Reset Hex", self.colorHexInputData.text)
+  -- print("Reset Hex", self.colorHexInputData.text)
 
   self:UpdateHexValue("#"..self.colorHexInputData.text)
   -- Update the color from the hex value
@@ -347,7 +368,7 @@ end
 
 function EditColorModal:Close()
 
-  print("close", self.tmpColor, self.maskColor)
+  -- print("close", self.tmpColor, self.maskColor)
   Color(self.tmpColor, self.maskColor)
 
 end
@@ -363,19 +384,32 @@ function EditColorModal:Update(timeDelta)
 
     if(mouseDown) then
 
-      local h = (editorUI.collisionManager.mousePos.x - self.colorSpaceRect.x) / self.colorSpaceRect.w
+      if(self.rgbMode == true) then
 
-      -- TODO need to flip this value horizontally
-      local s = ((editorUI.collisionManager.mousePos.y - self.colorSpaceRect.y + 10) / (self.colorSpaceRect.h + 20))
+        self.tmpR = ((editorUI.collisionManager.mousePos.x - self.colorSpaceRect.x) / self.colorSpaceRect.w) * 255
+        self.tmpG = ((editorUI.collisionManager.mousePos.y - self.colorSpaceRect.y) / self.colorSpaceRect.h ) * 255
+        self.tmpB = (1 - (editorUI.collisionManager.mousePos.x - self.colorSpaceRect.x) / self.colorSpaceRect.w) * 255
 
-      -- This is always 100% when in the picker
-      local v = 1 - (((editorUI.collisionManager.mousePos.y - self.colorSpaceRect.y) / (self.colorSpaceRect.h + 30)))
+      else
 
-      local r, g, b = self:HSVToRGB(h, s, v)
+        self.tmpH = (editorUI.collisionManager.mousePos.x - self.colorSpaceRect.x) / self.colorSpaceRect.w
 
-      local hex = self:RGBToHex(r, g, b)
+        -- TODO need to flip this value horizontally
+        self.tmpS = ((editorUI.collisionManager.mousePos.y - self.colorSpaceRect.y + 10) / (self.colorSpaceRect.h + 20))
 
-      self:UpdateHexValue(hex)
+        -- This is always 100% when in the picker
+        self.tmpV = 1 - (((editorUI.collisionManager.mousePos.y - self.colorSpaceRect.y) / (self.colorSpaceRect.h + 30)))
+
+        self.tmpR, self.tmpG, self.tmpB = self:HSVToRGB(self.tmpH, self.tmpS, self.tmpV)
+
+      end
+
+      local newHex = self:RGBToHex(self.tmpR, self.tmpG, self.tmpB)
+
+      self:UpdateHexValue(newHex)
+
+      -- TODO need to test for palette mode
+      -- self.showWarning = table.indexOf(self.colorCache, newHex) > - 1
 
       -- print("Color Picker", editorUI.collisionManager.mousePos.x, editorUI.collisionManager.mousePos.y, h, s)
 
@@ -402,7 +436,7 @@ function EditColorModal:Update(timeDelta)
 
       self:UpdateHexValue(hex)
 
-      print("Grey Picker", editorUI.collisionManager.mousePos.x, editorUI.collisionManager.mousePos.y)
+      -- print("Grey Picker", editorUI.collisionManager.mousePos.x, editorUI.collisionManager.mousePos.y)
 
     end
 
@@ -440,10 +474,13 @@ function EditColorModal:Update(timeDelta)
 
       newHex = self:RGBToHex(r, g, b )
 
+
+
     end
 
     editorUI:ChangeInputField(self.colorHexInputData, newHex:sub(2, - 1), false)
 
+    self.showWarning = table.indexOf(self.colorCache, (newHex)) > - 1
 
 
     -- Set tmp color
@@ -491,6 +528,8 @@ function EditColorModal:UpdateHexValue(value)
   editorUI:ChangeInputField(self.redInputData, tostring(r))
   editorUI:ChangeInputField(self.greenInputData, tostring(g))
   editorUI:ChangeInputField(self.blueInputData, tostring(b))
+
+  self.showWarning = table.indexOf(self.colorCache, (value)) > - 1
 
 end
 
@@ -596,5 +635,7 @@ end
 
 
 function EditColorModal:Draw()
-
+  if(self.showWarning == true) then
+    DrawSprites(colorwarningicon.spriteIDs, self.rect.x + 124, self.rect.y + 35, colorwarningicon.width, false, false, DrawMode.Sprite)
+  end
 end
