@@ -3,12 +3,12 @@
     "GameChip":
     {
         "savedData":{
-            "selectedSprite": "-1",
-            "selectedColor": "55",
-            "rootDirectory": "/Disks/EmptyDisk/NewProject/",
-            "sessionID": "201903021820056560",
+            "selectedPalette": "-1",
             "editing": "undefined",
-            "selectedPalette": "-1"
+            "sessionID": "201903022034593137",
+            "rootDirectory": "/Disks/EmptyDisk/ReaperBoyDisk2/",
+            "selectedColor": "3",
+            "selectedSprite": "-1"
         }
     }
 }
