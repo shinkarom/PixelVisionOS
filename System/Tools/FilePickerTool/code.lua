@@ -137,6 +137,8 @@ local editorMapping = FindEditors()
 -- use this method to configure background color, ScreenBufferChip and draw a text box.
 function Init()
 
+  runningFromDisk = string.starts(rootPath, "/Disks/")
+
   DrawWallpaper()
 
   -- Disable the back key in this tool
@@ -364,7 +366,14 @@ end
 function DrawWallpaper()
 
   -- Check version
-
+  --   rootDirectory = ReadMetaData("RootPath", nil)
+  --   print("rootDirectory", rootDirectory)
+  --
+  --
+  --
+  -- if()) then
+  --   runnerName == MakeVersion
+  -- end
 
   -- Set up logo values
   local logoSpriteData = _G["logoplay"]
@@ -372,18 +381,18 @@ function DrawWallpaper()
   local backgroundColor = 5
 
   -- Set logo
-  if(runnerName == MakeVersion) then
+  if(not runningFromDisk) then
     logoSpriteData = _G["logomake"]
     -- colorOffset = 0
     -- backgroundColor = 5
-  elseif(runnerName == DrawVersion) then
-    logoSpriteData = _G["logodraw"]
-    colorOffset = 5
-    backgroundColor = 1
-  elseif(runnerName == TuneVersion) then
-    logoSpriteData = _G["logotune"]
-    -- colorOffset = 0
-    backgroundColor = 8
+    -- elseif(runnerName == DrawVersion) then
+    --   logoSpriteData = _G["logodraw"]
+    --   colorOffset = 5
+    --   backgroundColor = 1
+    -- elseif(runnerName == TuneVersion) then
+    --   logoSpriteData = _G["logotune"]
+    --   -- colorOffset = 0
+    --   backgroundColor = 8
   end
 
   -- Update background
@@ -581,6 +590,7 @@ function OnCopy()
 
     if(CanCopy(file)) then
 
+      print("Copy", file.path, file.name)
       -- Copy the file to the list
       table.insert(filesToCopy, file)
 
@@ -637,9 +647,23 @@ function OnCopy()
 
 end
 
+function GetPathToFile(parent, file)
+
+  local tmpPath = parent .. file.fullName
+
+  if(file.isDirectory) then
+    tmpPath = tmpPath .. "/"
+  end
+
+  return tmpPath
+
+end
+
 function OnPaste(dest)
 
   dest = dest or currentDirectory
+
+  print("Dest", dest)
 
   if(filesToCopy == nil) then
     return
@@ -652,8 +676,17 @@ function OnPaste(dest)
 
   for i = 1, total do
 
+    -- local file =
+    --
     local file = filesToCopy[i]
-    local tmpPath = dest .. file.fullName
+    --
+    -- local tmpPath = dest .. file.fullName
+    --
+    -- if(file.isDirectory) then
+    --   tmpPath = tmpPath .. "/"
+    -- end
+
+    local tmpPath = GetPathToFile(dest, file)
 
     -- Make sure file doesn't exist and the src path doesn't match the dest path
     if(PathExists(tmpPath) and tmpPath ~= file.path) then
@@ -705,7 +738,17 @@ function TriggerFileCopy(dest)
   -- This function assumes all the copy action has been checked and can be performed
 
   for i = 1, #filesToCopy do
-    CopyFile(filesToCopy[i].path, dest)
+
+    local file = filesToCopy[i]
+    --
+    -- local tmpPath = dest .. file.fullName
+    --
+    -- if(file.isDirectory) then
+    --   tmpPath = "/"
+    -- end
+
+    CopyFile(file.path, GetPathToFile(dest, file))
+
   end
 
   filesToCopy = nil

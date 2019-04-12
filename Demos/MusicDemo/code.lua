@@ -14,11 +14,14 @@
 -- Shawn Rakowski - @shwany
 --
 
+local startMessage = "Press any button to play!"
+local stopMessage = "Press any button to stop!"
+
 function Init()
 
   -- display instruction text for playing thesound
   DrawText("Music Demo", 1, 1, DrawMode.Tile, "large", 15)
-  DrawText("Click anywhere to play!", 1, 4, DrawMode.Tile, "large", 15)
+  DrawText(startMessage, 1, 4, DrawMode.Tile, "large", 15)
 
   --apiBridge:LoadSong(0)
 end
@@ -27,17 +30,37 @@ function Update()
   -- get if the mouse is down
   local mouseDown = MouseButton(0, InputState.Released)
 
+  -- Get the current song data table
+  local songData = SongData()
+  local playing = songData["playing"] == 1
+
   -- if mouse is down, play the first sound sfx
   if(mouseDown == true) then
-    -- play the first sound id in the first channel
-    PlayPatterns({0, 1, 2, 3, 4}, true)
+
+    if(playing) then
+      StopSong()
+      DrawText(startMessage, 1, 4, DrawMode.Tile, "large", 15)
+    else
+      -- play the first sound id in the first channel
+      PlayPatterns({0, 1, 2, 3, 4}, true)
+      DrawText(stopMessage, 1, 4, DrawMode.Tile, "large", 15)
+    end
+
   end
 
-  local patternID = 0
-  local currentBeat = 0
-  local totalNotes = 32
+  -- See if the song is playing
+  if(playing) then
 
-  DrawText("Pattern ID " .. patternID .. "/5" .." Beat " .. currentBeat .. "/" .. totalNotes, 8, 256 - 32, DrawMode.Sprite, "large", 15)
+    -- Pull out each of the values and format them
+
+    DrawText("Loop " .. tostring(songData["loop"] == 1), 8, 256 - 32 - 16, DrawMode.Sprite, "large", 15)
+
+    -- Draw the values to the screen
+    DrawText("Pattern " .. songData["pattern"] .. "/" .. songData["patterns"], 8, 256 - 32 - 8, DrawMode.Sprite, "large", 15)
+
+    DrawText("Note " .. string.format("%02d", tostring(songData["note"])) .. "/" .. songData["notes"], 8, 256 - 32, DrawMode.Sprite, "large", 15)
+
+  end
 
 end
 

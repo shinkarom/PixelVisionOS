@@ -1,12 +1,15 @@
 # installer values
-$dir=System
+# $dir=System
 $readme=Welcome to the Pixel Vision OS installer. This will install the OS into the root of the Workspace drive and allow you to boot Pixel Vision 8 without the need for a startup disk. After the installer is finished, eject the disk in order to reboot from the Workspace drive. You can do a clean install if you want to wipe the contents of the Workspace and start with a fresh install of Pixel Vision OS. You will lose any changes made to files in the Libs and Tools folder.
 
 # bios values
 # $bios=WorkspaceDir:"Workspace"
-$bios=AutoRun|"/Workspace/Tools/FilePickerTool/"
+$bios=AutoRun|/Workspace/System/Tools/FilePickerTool/
+$bios=DefaultTemplate|/Workspace/Templates/PV8System/
 
 # files to copy
+/Artpacks/ReaperBoy/
+/Artpacks/SpaceRanger/
 /System/Libs/pixel-vision-os-canvas-v2.lua
 /System/Libs/pixel-vision-os-color-picker-v2.lua
 /System/Libs/pixel-vision-os-color-utils-v2.lua
@@ -33,7 +36,15 @@ $bios=AutoRun|"/Workspace/Tools/FilePickerTool/"
 /System/Libs/pixel-vision-ui-v2.lua
 /System/Tools/FilePickerTool/
 /System/Tools/ImagePreviewTool/
+/System/Tools/InstallerTool/
 /System/Tools/LogPreviewTool/
 /System/Tools/SettingsTool/
 /System/Tools/TextEditorTool/
-/System/Tools/InstallerTool/
+/Templates/SystemTool/
+/Templates/PV8System/
+/Templates/Pico8System/
+/Templates/MastrSystem/
+/Templates/GGSystem/
+/Templates/GBoySystem/
+/Templates/FamiSystem/
+/Templates/ArduboySystem/

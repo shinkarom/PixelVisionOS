@@ -81,7 +81,7 @@ function Init()
 
     end
 
-    local folderName = variables["dir"] or "Games"
+    local folderName = variables["dir"] or "Workspace"
 
     nameInputData = editorUI:CreateInputField({x = 48, y = 40, w = 152}, folderName, "Enter in a file name to this string input field.", "file")
 
@@ -129,12 +129,15 @@ function Init()
         end
       end
 
-      pixelVisionOS:ShowMessageModal("Install Files", "Are you sure you want to install ".. #filesToCopy .." items in '/Workspace/".. nameInputData.text .."/'? This will overwrite any existing files and can not be undone.", 160, true,
+      -- Create  the install path without the last slash
+      local installPath = "/Workspace" .. (nameInputData.text:lower() ~= "workspace" and "/"..nameInputData.text or "")
+
+      pixelVisionOS:ShowMessageModal("Install Files", "Are you sure you want to install ".. #filesToCopy .." items in '".. installPath .."/'? This will overwrite any existing files and can not be undone.", 160, true,
         function()
 
           if(pixelVisionOS.messageModal.selectionValue == true) then
 
-            OnInstall()
+            OnInstall(installPath)
 
           end
 
@@ -289,6 +292,10 @@ function DrawFileList(offset)
 
     -- TODO need to check the size of the name
 
+    if(#fileName > 49) then
+      fileName = fileName:sub(1, 49 - 3) .. "..."
+    end
+
     fileName = string.rpad(fileName, 200, " "):upper()
 
     DrawText(fileName, 25, 160 + (i * 8), DrawMode.TilemapCache, "small", 0, - 4)
@@ -297,7 +304,7 @@ function DrawFileList(offset)
 
 end
 
-function OnInstall()
+function OnInstall(rootPath)
 
   -- print("Install")
 
@@ -308,11 +315,15 @@ function OnInstall()
   installingCounter = 0
   installingTotal = #filesToCopy
 
+  installRoot = rootPath
+
+  -- print("Install Root", installRoot)
 
 end
 
 function OnInstallNextStep()
 
+  -- print("Next step")
   -- Look to see if the modal exists
   if(installingModal == nil) then
 
@@ -336,9 +347,10 @@ function OnInstallNextStep()
 
   if(path ~= nil) then
 
+    -- print("Name", nameInputData.text)
+    -- local destFolderName = nameInputData.text:lower() == "workspace" and "" or nameInputData.text
 
-
-    local dest = "/Workspace/" ..nameInputData.text .. path
+    local dest = installRoot .. path
 
     -- Combine the root directory and path but remove the first slash from the path
     path = rootDirectory .. string.sub(path, 2)
@@ -359,7 +371,17 @@ function OnInstallComplete()
 
   installing = false
 
+  -- Write to bios
+  for i = 1, #biosProperties do
+
+    local prop = biosProperties[i]
+    -- print("Write to bios", prop[1], prop[2])
+    WriteBiosData(prop[1], prop[2])
+  end
+
   --pixelVisionOS:CloseModal()
+
+  RebuildWorkspace()
 
   OnQuit()
   -- installingModal:OnComplete()
