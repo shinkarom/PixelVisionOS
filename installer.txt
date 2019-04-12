@@ -1,0 +1,39 @@
+# installer values
+$dir=System
+$readme=Welcome to the Pixel Vision OS installer. This will install the OS into the root of the Workspace drive and allow you to boot Pixel Vision 8 without the need for a startup disk. After the installer is finished, eject the disk in order to reboot from the Workspace drive. You can do a clean install if you want to wipe the contents of the Workspace and start with a fresh install of Pixel Vision OS. You will lose any changes made to files in the Libs and Tools folder.
+
+# bios values
+# $bios=WorkspaceDir:"Workspace"
+$bios=AutoRun|"/Workspace/Tools/FilePickerTool/"
+
+# files to copy
+/System/Libs/pixel-vision-os-canvas-v2.lua
+/System/Libs/pixel-vision-os-color-picker-v2.lua
+/System/Libs/pixel-vision-os-color-utils-v2.lua
+/System/Libs/pixel-vision-os-message-bar-v2.lua
+/System/Libs/pixel-vision-os-message-modal-v2.lua
+/System/Libs/pixel-vision-os-modal-v2.lua
+/System/Libs/pixel-vision-os-sprite-picker-v2.lua
+/System/Libs/pixel-vision-os-title-bar-v2.lua
+/System/Libs/pixel-vision-os-undo-v2.lua
+/System/Libs/pixel-vision-os-v2.lua
+/System/Libs/pixel-vision-ui-button-v2.lua
+/System/Libs/pixel-vision-ui-collision-manager-v2.lua
+/System/Libs/pixel-vision-ui-input-area-v2.lua
+/System/Libs/pixel-vision-ui-input-field-v2.lua
+/System/Libs/pixel-vision-ui-knob-v2.lua
+/System/Libs/pixel-vision-ui-mouse-cursor-v2.lua
+/System/Libs/pixel-vision-ui-number-stepper-v2.lua
+/System/Libs/pixel-vision-ui-picker-v2.lua
+/System/Libs/pixel-vision-ui-slider-v2.lua
+/System/Libs/pixel-vision-ui-string-stepper-v2.lua
+/System/Libs/pixel-vision-ui-text-v2.lua
+/System/Libs/pixel-vision-ui-toggle-group-v2.lua
+/System/Libs/pixel-vision-ui-utils-v2.lua
+/System/Libs/pixel-vision-ui-v2.lua
+/System/Tools/FilePickerTool/
+/System/Tools/ImagePreviewTool/
+/System/Tools/LogPreviewTool/
+/System/Tools/SettingsTool/
+/System/Tools/TextEditorTool/
+/System/Tools/InstallerTool/
